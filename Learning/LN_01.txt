@@ -1,0 +1,1 @@
+If i give static to a method or variable in a class then i can use it directly no need to create instances
