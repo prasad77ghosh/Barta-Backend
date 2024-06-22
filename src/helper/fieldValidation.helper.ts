@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { validationResult } from "express-validator";
 import { BadRequest } from "http-errors";
-const fieldValidateError = (req: Request) => {
+export const fieldValidateError = (req: Request) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new BadRequest(
@@ -13,5 +13,3 @@ const fieldValidateError = (req: Request) => {
     );
   }
 };
-
-export default fieldValidateError;

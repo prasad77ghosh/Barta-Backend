@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from "express";
+import { fieldValidateError } from "../helper/fieldValidation.helper";
 import { body } from "express-validator";
-import { NotAcceptable, Conflict } from "http-errors";
-import { fieldValidateError } from "../helper";
-import { UserSchema } from "../models";
-import { HashService } from "../services/hash.service";
+import { NotAcceptable } from "http-errors";
 
 class AuthController {
   async register(req: Request, res: Response, next: NextFunction) {
@@ -11,28 +9,11 @@ class AuthController {
       const { name, email, password, confirmPassword } = req.body;
       // validate req body
       fieldValidateError(req);
-      // const profile = req?.files?.profile;
-
-      const isUserExist = await UserSchema.findOne({ email: email });
-      if (isUserExist)
-        throw new Conflict("User is already exist with this mail");
-      if (password !== confirmPassword)
-        throw new NotAcceptable("Password and confirmPassword should be same");
-
-      //hashing password
-      const hashPassword = HashService.hashPassword(password);
-
-      //register user
-      const registerUser = await UserSchema.create({
-        name: name,
-        email: email,
-        password: hashPassword,
-      });
+      const profile = req?.files?.profile;
 
       res.json({
         success: true,
-        msg: "User Registered successfully, Please check your mail for verification",
-        data: registerUser,
+        message: `${name}-${email}-${password}-${confirmPassword}`,
       });
     } catch (error) {
       next(error);
