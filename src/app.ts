@@ -15,11 +15,12 @@ class App {
     const options = {};
     const server = createServer(options, this.app);
     server.listen(serverPort, (): void => {
-      console.log(`Listening on ${serverPort}...`);
       const middlewares = fs.readdirSync(path.join(__dirname, "/middlewares"));
       // console.log({ middlewares });
       this.middleware(middlewares, "top."); // top middleware
+      this.routes();
       this.middleware(middlewares, "bottom.");
+      console.log(`Listening on ${serverPort}...`);
     });
   }
 
@@ -33,6 +34,17 @@ class App {
             new middleReader.default(this.app);
           }
         );
+      }
+    });
+  }
+  private routes() {
+    const subRoutes = fs.readdirSync(path.join(__dirname, "/routes"));
+    subRoutes.forEach((file: any): void => {
+      if (file.includes(".routes.")) {
+        import(path.join(__dirname + "/routes/" + file)).then((route) => {
+          const rootPath = `/api/v1/${new route.default().path}`;
+          this.app.use(rootPath, new route.default().router);
+        });
       }
     });
   }

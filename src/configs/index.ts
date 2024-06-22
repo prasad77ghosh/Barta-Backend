@@ -9,3 +9,6 @@ export const CloudFrontUrl = String(process.env.CLOUD_FRONT_URL);
 export const CloudFrontDistId = String(process.env.CLOUD_FRONT_DIST_ID);
 export const AccessTokenSecret = String(process.env.ACCESS_TOKEN_SECRET);
 export const RefreshTokenSecret = String(process.env.REFRESH_TOKEN_SECRET);
+export const Email = String(process.env.MAIL);
+export const Password = String(process.env.MAIL_PASSWORD);
+export const Host = String(process.env.MAIL_HOST);

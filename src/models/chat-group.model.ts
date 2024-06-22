@@ -24,15 +24,12 @@ const chatGroupSchema = new Schema<CHAT_GROUP_TYPE, Model<CHAT_GROUP_TYPE>>(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-<<<<<<< HEAD
-=======
     members: [
       {
         type: Schema.Types.ObjectId,
         ref: "User",
       },
     ],
->>>>>>> 86bded18258d0434edd58980058d0893fa6c35e2
   },
   {
     timestamps: true,
