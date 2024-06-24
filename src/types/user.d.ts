@@ -11,6 +11,7 @@ export default interface USER_TYPE extends Document {
   role: ROLE;
   name: string;
   slugName: string;
+  googleId?: string;
   email: string;
   phone: string;
   password: string;
@@ -19,5 +20,6 @@ export default interface USER_TYPE extends Document {
   profilePath?: string;
   isBlocked: boolean;
   isVerified: boolean;
+  refreshToken?: string;
   fcmToken: FCMToken;
 }

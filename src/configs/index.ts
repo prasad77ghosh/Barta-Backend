@@ -12,3 +12,6 @@ export const RefreshTokenSecret = String(process.env.REFRESH_TOKEN_SECRET);
 export const Email = String(process.env.MAIL);
 export const Password = String(process.env.MAIL_PASSWORD);
 export const Host = String(process.env.MAIL_HOST);
+export const GoogleClientId = String(process.env.GOOGLE_CLIENT_ID);
+export const GoogleClientSecret = String(process.env.GOOGLE_CLIENT_SECRET);
+export const GoogleCallbackUrl = String(process.env.GOOGLE_CALLBACK_URL);

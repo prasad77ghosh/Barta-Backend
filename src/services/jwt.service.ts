@@ -10,7 +10,7 @@ export default class JwtService {
       };
       const options: jwt.SignOptions = {
         audience: userData as string,
-        expiresIn: Math.floor(Date.now() / 1000) + 1 * 60, // 1 minute
+        expiresIn: "1m",
       };
       jwt.sign(payload, AccessTokenSecret, options, (error, token) => {
         if (error) return reject(error);
@@ -19,7 +19,22 @@ export default class JwtService {
     });
   }
 
-  public generateRefreshToken(userData: String) {}
+  public generateRefreshToken(userData: String): Promise<string | undefined> {
+    return new Promise((resolve, reject) => {
+      const payload = {
+        name: "Otp-Service",
+        iss: "S-Homes.com",
+      };
+      const options: jwt.SignOptions = {
+        audience: userData as string,
+        expiresIn: "7d",
+      };
+      jwt.sign(payload, AccessTokenSecret, options, (error, token) => {
+        if (error) return reject(error);
+        return resolve(token);
+      });
+    });
+  }
 
   public verifyAccessToken() {}
 

@@ -21,6 +21,15 @@ const userSchema = new Schema<USER_TYPE, Model<USER_TYPE>>(
       unique: true,
       trim: true,
     },
+    googleId: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
+    refreshToken: {
+      type: String,
+      trim: true,
+    },
     phone: {
       type: String,
       trim: true,
