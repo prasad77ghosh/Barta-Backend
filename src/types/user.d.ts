@@ -20,6 +20,8 @@ export default interface USER_TYPE extends Document {
   profilePath?: string;
   isBlocked: boolean;
   isVerified: boolean;
+  hashOtp?: string;
+  otpExpire?: Date;
   refreshToken?: string;
   fcmToken: FCMToken;
 }

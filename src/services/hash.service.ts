@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-class EncryptAndDecryptService {
+export class EncryptAndDecryptService {
   private salt: string;
   private iterations: number;
   private digest: string;
@@ -12,26 +12,46 @@ class EncryptAndDecryptService {
     this.digest = "sha512";
     this.keyLength = 64;
   }
-  public hashPassword(password: string): string {
-    const hash = crypto
-      .pbkdf2Sync(
+
+  public async hashPassword(password: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      crypto.pbkdf2(
         password,
         this.salt,
         this.iterations,
         this.keyLength,
-        this.digest
-      )
-      .toString("hex");
-    return `${this.salt}:${hash}`;
+        this.digest,
+        (err, derivedKey) => {
+          if (err) {
+            reject(err);
+          } else {
+            return resolve(`${this.salt}:${derivedKey.toString("hex")}`);
+          }
+        }
+      );
+    });
   }
 
-  public matchPassword(storedHashPassword: string, password: string): boolean {
-    const [salt, originalHash] = storedHashPassword.split(":");
-    const hash = crypto
-      .pbkdf2Sync(password, salt, this.iterations, this.keyLength, this.digest)
-      .toString("hex");
-    return hash === originalHash;
+  public async matchPassword(
+    storedHashPassword: string,
+    password: string
+  ): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const [salt, originalHash] = storedHashPassword.split(":");
+      crypto.pbkdf2(
+        password,
+        salt,
+        this.iterations,
+        this.keyLength,
+        this.digest,
+        (err, derivedKey) => {
+          if (err) {
+            reject(err);
+          } else {
+            return resolve(derivedKey.toString("hex") === originalHash);
+          }
+        }
+      );
+    });
   }
 }
-
-export const HashService = new EncryptAndDecryptService();

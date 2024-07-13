@@ -23,7 +23,7 @@ const userSchema = new Schema<USER_TYPE, Model<USER_TYPE>>(
     },
     googleId: {
       type: String,
-      unique: true,
+      // unique: true,
       trim: true,
     },
     refreshToken: {

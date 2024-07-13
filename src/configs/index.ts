@@ -15,3 +15,4 @@ export const Host = String(process.env.MAIL_HOST);
 export const GoogleClientId = String(process.env.GOOGLE_CLIENT_ID);
 export const GoogleClientSecret = String(process.env.GOOGLE_CLIENT_SECRET);
 export const GoogleCallbackUrl = String(process.env.GOOGLE_CALLBACK_URL);
+export const OtpSecret = String(process.env.OTP_TOKEN_SECRET);
