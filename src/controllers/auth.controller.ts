@@ -16,7 +16,6 @@ class AuthController {
     try {
       const { name, email, password, confirmPassword } = req.body;
 
-      console.log({ name, email, password, confirmPassword });
       // validate req body
       fieldValidateError(req);
       const profile = req?.files?.profile;
@@ -64,17 +63,23 @@ class AuthController {
       await new EmailService().emailSend({
         email,
         subject,
-        message: `Hi <b>${name}</b> 
+        message: `Hi <b>${name}</b>
         Your One Time Password for forgot password is <b>
-        ${otp}</b>. Remember your OTP will be expired in 
+        ${otp}</b>. Remember your OTP will be expired in
         <b>2 minutes</b>`,
+      });
+      res.cookie("otp_token", OtpToken, {
+        maxAge: 3 * 60 * 1000,
+        httpOnly: true,
+        secure: false,
+        path: "/",
+        sameSite: "lax",
       });
 
       res.json({
         success: true,
         msg: "You have register successfully, please check your mail for otp verification",
         data: registerUser,
-        token: OtpToken,
       });
     } catch (error) {
       console.log({ error });
@@ -89,14 +94,21 @@ class AuthController {
     try {
       const { otp } = req.body;
       const id = req.payload?.userId;
+
+      console.log({ otp, id });
       // for request validation
       fieldValidateError(req);
 
       const user = await UserSchema.findById(id);
       if (!user) throw new NotFound("User not found!");
 
+      console.log({
+        hashOtp: user.hashOtp,
+        otp,
+      });
+
       const isOtpMatch = user.hashOtp
-        ? await new EncryptAndDecryptService().matchPassword(otp, user.hashOtp)
+        ? await new EncryptAndDecryptService().matchPassword(user.hashOtp, otp)
         : undefined;
       if (!isOtpMatch) throw new NotAcceptable("Your Otp is Incorrect");
 
@@ -127,8 +139,20 @@ class AuthController {
       user.isVerified = true;
       user.hashOtp = undefined;
       user.otpExpire = undefined;
-      user.refreshToken = refreshToken;
+      // user.refreshToken = refreshToken;
       user.save();
+
+      res.cookie("accessToken", accessToken, {
+        maxAge: 1 * 60 * 1000,
+        httpOnly: true,
+        secure: false,
+        path: "/",
+        sameSite: "lax",
+      });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+      });
 
       res.json({
         success: true,

@@ -46,6 +46,7 @@ export class EncryptAndDecryptService {
         this.digest,
         (err, derivedKey) => {
           if (err) {
+            console.log({ err });
             reject(err);
           } else {
             return resolve(derivedKey.toString("hex") === originalHash);

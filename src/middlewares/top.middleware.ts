@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import express, { Application, NextFunction, Request, Response } from "express";
 import fileUpload from "express-fileupload";
 
@@ -15,6 +16,7 @@ class TopMiddleWare {
     app.use(express.urlencoded({ extended: true }));
     //cors
     app.use(this.allowCrossDomain);
+    app.use(cookieParser());
   }
 
   private allowCrossDomain(req: Request, res: Response, next: NextFunction) {

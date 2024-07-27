@@ -3,6 +3,7 @@ import { DataBase } from "./db";
 import { createServer } from "http";
 import path from "path";
 import fs from "fs";
+import SocketServer from "./socket";
 
 class App {
   public app: Application;
@@ -16,12 +17,14 @@ class App {
     const server = createServer(options, this.app);
     server.listen(serverPort, (): void => {
       const middlewares = fs.readdirSync(path.join(__dirname, "/middlewares"));
-      // console.log({ middlewares });
-      this.middleware(middlewares, "top."); // top middleware
+      this.middleware(middlewares, "top.");
       this.routes();
       this.middleware(middlewares, "bottom.");
       console.log(`Listening on ${serverPort}...`);
     });
+
+    // connect socket server
+    new SocketServer(server);
   }
 
   private middleware(middlewares: any[], str: "bottom." | "top.") {

@@ -44,6 +44,10 @@ const userSchema = new Schema<USER_TYPE, Model<USER_TYPE>>(
       trim: true,
       select: false,
     },
+    hashOtp: {
+      type: String,
+      trim: true,
+    },
     isVerified: {
       type: Boolean,
       default: false,

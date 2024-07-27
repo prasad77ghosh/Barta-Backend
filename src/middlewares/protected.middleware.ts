@@ -12,7 +12,8 @@ export default class ProtectedMiddleware extends JwtService {
     next: NextFunction
   ) {
     try {
-      const token = req.header("x-otp-token");
+      const token = req.cookies.otp_token;
+      console.log({ token });
       if (!token) throw new Unauthorized("Unauthorized");
       const payload = super.otpTokenVerify(token);
       if (!payload?.aud) throw new Unauthorized("Unauthorized");
