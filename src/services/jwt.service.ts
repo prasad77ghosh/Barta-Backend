@@ -19,7 +19,7 @@ export default class JwtService {
     });
   }
 
-  public generateAccessToken(userData: String) {
+  public generateAccessToken(userData: String): Promise<string | undefined> {
     return new Promise((resolve, reject) => {
       const payload = {
         name: "Otp-Service",
@@ -27,7 +27,7 @@ export default class JwtService {
       };
       const options: jwt.SignOptions = {
         audience: userData as string,
-        expiresIn: "1m",
+        expiresIn: "1h",
       };
       jwt.sign(payload, AccessTokenSecret, options, (error, token) => {
         if (error) return reject(error);
@@ -73,5 +73,37 @@ export default class JwtService {
     );
   }
 
-  public generateAccessTokenByRefreshToken() {}
+  // verify refresh token
+  public refreshTokenVerify(token: any): any {
+    return jwt.verify(
+      token,
+      RefreshTokenSecret,
+      (err: any, payload: any): any => {
+        if (err) return { error: err };
+        return payload;
+      }
+    );
+  }
+
+  public generateAccessTokenByRefreshToken(
+    token: any
+  ): Promise<string | undefined> {
+    return new Promise((resolve, reject) => {
+      try {
+        const payload = this.refreshTokenVerify(token);
+
+        if (!payload) {
+          reject("Not a valid refresh token");
+          return;
+        }
+
+        const userObj = JSON.parse(payload?.aud);
+        const accessToken = this.generateAccessToken(JSON.stringify(userObj));
+        return resolve(accessToken);
+      } catch (error) {
+        console.log("ERR", error);
+        reject(error);
+      }
+    });
+  }
 }

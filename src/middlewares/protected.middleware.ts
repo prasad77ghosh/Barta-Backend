@@ -34,11 +34,14 @@ export default class ProtectedMiddleware extends JwtService {
     next: NextFunction
   ) {
     try {
-      const token = req.header("x-access-token");
+      const token = req.cookies.accessToken;
+      console.log("ACCDF", token);
       if (!token) throw new Unauthorized("Unauthorized");
       const payload = super.accessTokenVerify(token);
+      console.log("PAYLOAD", payload?.aud);
       if (!payload?.aud) throw new Unauthorized("Unauthorized");
       let userObj = JSON.parse(payload.aud);
+      console.log("USEROBJ", userObj);
       if (!userObj.userId) throw new Unauthorized("Unauthorized");
       const user = await UserSchema.findById(userObj.userId);
       if (!user) throw new Unauthorized("Unauthorized");
@@ -58,7 +61,7 @@ export default class ProtectedMiddleware extends JwtService {
     next: NextFunction
   ) {
     try {
-      const token = req.header("x-access-token");
+      const token = req.cookies.accessToken;
       if (!token) throw new Unauthorized("Unauthorized");
       const payload = super.accessTokenVerify(token);
       if (!payload?.aud) throw new Unauthorized("Unauthorized");
@@ -86,7 +89,7 @@ export default class ProtectedMiddleware extends JwtService {
     next: NextFunction
   ) {
     try {
-      const token = req.header("x-access-token");
+      const token = req.cookies.accessToken;
       if (!token) throw new Unauthorized("Unauthorized");
 
       const payload = super.accessTokenVerify(token);
@@ -115,7 +118,7 @@ export default class ProtectedMiddleware extends JwtService {
     next: NextFunction
   ) {
     try {
-      const token = req.header("x-access-token");
+      const token = req.cookies.accessToken;
       if (!token) throw new Unauthorized("Unauthorized");
 
       const payload = super.accessTokenVerify(token);

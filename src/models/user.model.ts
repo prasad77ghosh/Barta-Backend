@@ -38,7 +38,9 @@ const userSchema = new Schema<USER_TYPE, Model<USER_TYPE>>(
       type: String,
       default: "+91",
     },
-
+    otpExpire: {
+      type: Number,
+    },
     password: {
       type: String,
       trim: true,

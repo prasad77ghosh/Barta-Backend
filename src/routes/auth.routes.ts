@@ -55,6 +55,12 @@ export default class AuthRoutes {
     );
 
     this.router.get(
+      "/pre-protected-self-data",
+      new ProtectedMiddleware().preProtected,
+      this.authController.getSelf
+    );
+
+    this.router.get(
       "/self",
       new ProtectedMiddleware().protected,
       this.authController.getSelf
@@ -72,6 +78,12 @@ export default class AuthRoutes {
       new ProtectedMiddleware().protected,
       AuthControllerValidator.changePassword,
       this.authController.changePassword
+    );
+
+    this.router.get(
+      "/refresh-access-token",
+      // new ProtectedMiddleware().protected,
+      this.authController.refreshAccessToken
     );
   }
 }

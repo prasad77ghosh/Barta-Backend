@@ -69,11 +69,10 @@ class AuthController {
         <b>2 minutes</b>`,
       });
       res.cookie("otp_token", OtpToken, {
-        maxAge: 3 * 60 * 1000,
         httpOnly: true,
-        secure: false,
+        secure: true,
         path: "/",
-        sameSite: "lax",
+        sameSite: "none",
       });
 
       res.json({
@@ -95,17 +94,11 @@ class AuthController {
       const { otp } = req.body;
       const id = req.payload?.userId;
 
-      console.log({ otp, id });
       // for request validation
       fieldValidateError(req);
 
       const user = await UserSchema.findById(id);
       if (!user) throw new NotFound("User not found!");
-
-      console.log({
-        hashOtp: user.hashOtp,
-        otp,
-      });
 
       const isOtpMatch = user.hashOtp
         ? await new EncryptAndDecryptService().matchPassword(user.hashOtp, otp)
@@ -114,6 +107,7 @@ class AuthController {
 
       const expire = user.otpExpire;
       if (expire && new Date(expire) < new Date()) {
+        console.log("Coming... expire");
         user.hashOtp = undefined;
         user.otpExpire = undefined;
         user.save();
@@ -142,23 +136,25 @@ class AuthController {
       // user.refreshToken = refreshToken;
       user.save();
 
+      //access token
       res.cookie("accessToken", accessToken, {
-        maxAge: 1 * 60 * 1000,
+        maxAge: 5 * 60 * 1000,
         httpOnly: true,
-        secure: false,
-        path: "/",
-        sameSite: "lax",
+        secure: true,
+        sameSite: "strict",
       });
+
+      //refresh token
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
+        sameSite: "strict",
       });
 
       res.json({
         success: true,
         msg: "You are logged in successfully...",
-        accessToken,
-        user,
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -248,6 +244,21 @@ class AuthController {
         credential
       );
 
+      //access token
+      res.cookie("accessToken", accessToken, {
+        maxAge: 60 * 60 * 1000,
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+
+      //refresh token
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+
       //update refresh token in user
       await UserSchema.findByIdAndUpdate(isUserExist.id, {
         refreshToken: refreshToken,
@@ -304,11 +315,17 @@ class AuthController {
         message: `Hi <b style = {{fontSize: "1rem"}}>${user.name}</b> Your One Time Password for forgot password is <b style = {{fontSize: "1rem"}}>${otp}</b>. Remember your OTP will be expired in <b>2 minutes</b>`,
       });
 
+      res.cookie("otp_token", OtpToken, {
+        httpOnly: true,
+        secure: true,
+        path: "/",
+        sameSite: "none",
+      });
+
       res.json({
         success: true,
         message:
           "OTP send successfully to your Email to verify your account please check your email..",
-        OtpToken,
       });
     } catch (error) {
       next(error);
@@ -363,6 +380,28 @@ class AuthController {
         success: true,
         message:
           "Password updated successfully. Now you can login with your new password!!",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // pre protected self data
+
+  async getPreProtectedSelfData(
+    req: MIDDLEWARE_OTP_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const id = req.payload?.userId;
+      if (!id) throw new NotFound("User not found!!");
+      const user = await UserSchema.findById(id);
+      if (!user) throw new NotFound("User not found!!");
+      res.json({
+        success: true,
+        message: "Getting user info successfully...",
+        user,
       });
     } catch (error) {
       next(error);
@@ -481,6 +520,34 @@ class AuthController {
         success: true,
         data: updatedUserWithNewPassword,
         message: "Password changed successfully...",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // generate access token from refresh token
+  async refreshAccessToken(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const token = req.cookies.refreshToken;
+      const accessToken =
+        await new JwtService().generateAccessTokenByRefreshToken(token);
+
+      res.cookie("accessToken", accessToken, {
+        maxAge: 60 * 60 * 1000,
+        httpOnly: true,
+        secure: false,
+        path: "/",
+        sameSite: "lax",
+      });
+
+      res.json({
+        success: true,
+        message: "Access token created successfully from refresh token",
       });
     } catch (error) {
       next(error);
