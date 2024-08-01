@@ -138,7 +138,7 @@ class AuthController {
 
       //access token
       res.cookie("accessToken", accessToken, {
-        maxAge: 5 * 60 * 1000,
+        maxAge: 60 * 60 * 1000,
         httpOnly: true,
         secure: true,
         sameSite: "strict",
@@ -221,10 +221,12 @@ class AuthController {
       //check password
       const isPasswordMatch = isUserExist.password
         ? await new EncryptAndDecryptService().matchPassword(
-            password,
-            isUserExist.password
+            isUserExist.password,
+            password
           )
         : undefined;
+
+      console.log({ isPasswordMatch });
 
       if (!isPasswordMatch)
         throw new NotAcceptable("email or password is incorrect!!");
@@ -266,8 +268,8 @@ class AuthController {
 
       res.json({
         success: true,
-        accessToken,
-        message: `${isUserExist.name} You are logged in successfully...`,
+        msg: `${isUserExist.name} You are logged in successfully...`,
+        data: isUserExist,
       });
     } catch (error) {
       next(error);

@@ -35,13 +35,10 @@ export default class ProtectedMiddleware extends JwtService {
   ) {
     try {
       const token = req.cookies.accessToken;
-      console.log("ACCDF", token);
       if (!token) throw new Unauthorized("Unauthorized");
       const payload = super.accessTokenVerify(token);
-      console.log("PAYLOAD", payload?.aud);
       if (!payload?.aud) throw new Unauthorized("Unauthorized");
       let userObj = JSON.parse(payload.aud);
-      console.log("USEROBJ", userObj);
       if (!userObj.userId) throw new Unauthorized("Unauthorized");
       const user = await UserSchema.findById(userObj.userId);
       if (!user) throw new Unauthorized("Unauthorized");
@@ -136,6 +133,25 @@ export default class ProtectedMiddleware extends JwtService {
       if (user.isBlocked)
         throw new Locked("You are blocked by your higher authority..");
       req.payload = userObj;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async socketAuthenticator(err: any, socket: any, next: any) {
+    try {
+      if (err) return next(err);
+      const token = socket.cookies.accessToken;
+      console.log({ token });
+      if (!token) throw new Unauthorized("Unauthorized");
+      const payload = super.otpTokenVerify(token);
+      if (!payload?.aud) throw new Unauthorized("Unauthorized");
+      let userObj = JSON.parse(payload.aud);
+      if (!userObj.userId) throw new Unauthorized("Unauthorized");
+      const user = await UserSchema.findById(userObj.userId).select("status");
+      if (!user) throw new Unauthorized("Unauthorized");
+      socket.user = userObj;
       next();
     } catch (error) {
       next(error);

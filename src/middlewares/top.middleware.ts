@@ -17,6 +17,7 @@ class TopMiddleWare {
     //cors
     app.use(this.allowCrossDomain);
     app.use(cookieParser());
+    //socket io middleware
   }
 
   private allowCrossDomain(req: Request, res: Response, next: NextFunction) {
