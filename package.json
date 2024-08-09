@@ -16,6 +16,7 @@
     "@aws-sdk/client-s3": "^3.588.0",
     "@aws-sdk/s3-request-presigner": "^3.598.0",
     "connect-mongo": "^5.1.0",
+    "cookie": "^0.6.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "date-fns": "^3.3.1",
@@ -33,6 +34,7 @@
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
+    "@types/cookie": "^0.6.0",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

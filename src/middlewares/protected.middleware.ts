@@ -4,6 +4,8 @@ import { Unauthorized, Locked } from "http-errors";
 import { UserSchema } from "../models";
 import MIDDLEWARE_OTP_TYPE from "../types/otp";
 import JwtService from "../services/jwt.service";
+import cookie from "cookie";
+import { IncomingMessage } from "http";
 
 export default class ProtectedMiddleware extends JwtService {
   public async preProtected(
@@ -139,13 +141,13 @@ export default class ProtectedMiddleware extends JwtService {
     }
   }
 
-  public async socketAuthenticator(err: any, socket: any, next: any) {
+  public async socketAuthenticator(socket: any, next: any) {
     try {
-      if (err) return next(err);
-      const token = socket.cookies.accessToken;
-      console.log({ token });
+      const req = socket.request as IncomingMessage;
+      const cookies: any = cookie.parse(req.headers.cookie || "");
+      const token = cookies.accessToken;
       if (!token) throw new Unauthorized("Unauthorized");
-      const payload = super.otpTokenVerify(token);
+      const payload = super.accessTokenVerify(token);
       if (!payload?.aud) throw new Unauthorized("Unauthorized");
       let userObj = JSON.parse(payload.aud);
       if (!userObj.userId) throw new Unauthorized("Unauthorized");
@@ -154,6 +156,7 @@ export default class ProtectedMiddleware extends JwtService {
       socket.user = userObj;
       next();
     } catch (error) {
+      console.log({ error: error });
       next(error);
     }
   }

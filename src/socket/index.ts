@@ -3,6 +3,8 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import express, { Application, NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import ProtectedMiddleware from "../middlewares/protected.middleware";
+import { IncomingMessage } from "http";
+import cookie from "cookie";
 
 // interfaces
 interface ServerToClientEvents {
@@ -20,30 +22,38 @@ class SocketServer {
   constructor(server: HttpServer) {
     this.io = new SocketIOServer(server, {
       cors: {
-        origin: "*",
+        origin: ["http://localhost:5173", "http://localhost:3000"],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true,
+      },
+      cookie: {
+        name: "io",
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
       },
     });
-    this.app = express();
-
-    this.app.set("io", this.io);
 
     // socket middleware
-    this.io.use((socket, next) => {
-      cookieParser()(
-        socket.request as Request,
-        (socket.request as Request).res as Response,
-        async (err) =>
-          new ProtectedMiddleware().socketAuthenticator(err, socket, next)
-      );
+    this.io.use(async (socket: Socket, next) => {
+      try {
+        await new ProtectedMiddleware().socketAuthenticator(socket, next);
+      } catch (err: any) {
+        next(err);
+      }
     });
+
+    this.app = express();
+    this.app.set("io", this.io);
+
     this.io.on("connection", this.onConnection);
   }
 
   private onConnection = (
     socket: Socket<ClientToServerEvents, ServerToClientEvents>
   ) => {
-    console.log(`Client connected: ${socket.id}`);
-
+    const user = (socket as any).user;
+    console.log(`Client connected: ${user.name}`);
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);
     });
