@@ -18,11 +18,13 @@ interface ClientToServerEvents {
 class SocketServer {
   private io: SocketIOServer<ServerToClientEvents, ClientToServerEvents>;
   private app: Application;
+  private sockedIds: Map<string, string>;
 
   constructor(server: HttpServer) {
+    this.sockedIds = new Map();
     this.io = new SocketIOServer(server, {
       cors: {
-        origin: ["http://localhost:5173", "http://localhost:3000"],
+        origin: ["http://localhost:3000"],
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true,
       },
@@ -33,7 +35,6 @@ class SocketServer {
         sameSite: "lax",
       },
     });
-
     // socket middleware
     this.io.use(async (socket: Socket, next) => {
       try {
@@ -42,10 +43,8 @@ class SocketServer {
         next(err);
       }
     });
-
     this.app = express();
     this.app.set("io", this.io);
-
     this.io.on("connection", this.onConnection);
   }
 
@@ -53,6 +52,7 @@ class SocketServer {
     socket: Socket<ClientToServerEvents, ServerToClientEvents>
   ) => {
     const user = (socket as any).user;
+    this.sockedIds.set(user?.userId?.toString(), socket.id);
     console.log(`Client connected: ${user.name}`);
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);

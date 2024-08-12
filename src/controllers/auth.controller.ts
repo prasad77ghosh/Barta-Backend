@@ -146,6 +146,7 @@ class AuthController {
 
       //refresh token
       res.cookie("refreshToken", refreshToken, {
+        maxAge: 5 * 24 * 60 * 60 * 1000,
         httpOnly: true,
         secure: true,
         sameSite: "strict",
@@ -256,6 +257,7 @@ class AuthController {
 
       //refresh token
       res.cookie("refreshToken", refreshToken, {
+        maxAge: 5 * 24 * 60 * 60 * 1000,
         httpOnly: true,
         secure: true,
         sameSite: "strict",
@@ -550,6 +552,24 @@ class AuthController {
       res.json({
         success: true,
         message: "Access token created successfully from refresh token",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logOut(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      res.json({
+        success: true,
+        msg: "logout successfully...",
+        data: "Success",
       });
     } catch (error) {
       next(error);

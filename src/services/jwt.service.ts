@@ -101,7 +101,6 @@ export default class JwtService {
         const accessToken = this.generateAccessToken(JSON.stringify(userObj));
         return resolve(accessToken);
       } catch (error) {
-        console.log("ERR", error);
         reject(error);
       }
     });

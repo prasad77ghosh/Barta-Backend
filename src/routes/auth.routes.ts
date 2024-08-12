@@ -82,8 +82,13 @@ export default class AuthRoutes {
 
     this.router.get(
       "/refresh-access-token",
-      // new ProtectedMiddleware().protected,
       this.authController.refreshAccessToken
+    );
+
+    this.router.post(
+      "/log-out",
+      new ProtectedMiddleware().protected,
+      this.authController.logOut
     );
   }
 }
