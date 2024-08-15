@@ -23,6 +23,8 @@ class TopMiddleWare {
   private allowCrossDomain(req: Request, res: Response, next: NextFunction) {
     const allAllowedOrigin: string[] = [
       "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5173/",
       "http://localhost:3000/",
     ];
 

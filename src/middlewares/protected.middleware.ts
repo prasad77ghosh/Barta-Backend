@@ -156,7 +156,6 @@ export default class ProtectedMiddleware extends JwtService {
       socket.user = userObj;
       next();
     } catch (error) {
-      console.log({ error: error });
       next(error);
     }
   }
