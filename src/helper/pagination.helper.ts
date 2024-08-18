@@ -16,6 +16,7 @@ type ReturnType = {
 
 export const aggregationHelper = async <T>({
   model,
+  filterArgs,
   args,
   perPage,
   pageNo,
@@ -35,20 +36,61 @@ export const aggregationHelper = async <T>({
         );
       }
 
-      const [firstPromise, secondPromise] = await Promise.allSettled([
-        model.aggregate([
-          ...args,
-          {
-            $count: "totalCount",
-          },
-        ]),
-        model.aggregate([...args, ...pagination]),
-      ]);
+      let [firstPromise, secondPromise] =
+        filterArgs && filterArgs?.length > 0
+          ? await Promise.allSettled([
+              model.aggregate([
+                ...args,
+                ...filterArgs,
+                {
+                  $count: "totalCount",
+                },
+              ]),
+              model.aggregate([...filterArgs, ...args, ...pagination]),
+            ])
+          : await Promise.allSettled([
+              model.aggregate([
+                ...args,
+                {
+                  $count: "totalCount",
+                },
+              ]),
+              model.aggregate([...args, ...pagination]),
+            ]);
 
       if (firstPromise?.status === "rejected")
         throw new Error(firstPromise?.reason?.message);
       if (secondPromise?.status === "rejected")
         throw new Error(secondPromise?.reason?.message);
+
+      if (secondPromise.value?.length === 0) {
+        [firstPromise, secondPromise] =
+          filterArgs && filterArgs?.length > 0
+            ? await Promise.allSettled([
+                model.aggregate([
+                  ...args,
+                  ...filterArgs,
+                  {
+                    $count: "totalCount",
+                  },
+                ]),
+                model.aggregate([...filterArgs, ...args]),
+              ])
+            : await Promise.allSettled([
+                model.aggregate([
+                  ...args,
+                  {
+                    $count: "totalCount",
+                  },
+                ]),
+                model.aggregate([...args]),
+              ]);
+
+        if (firstPromise?.status === "rejected")
+          throw new Error(firstPromise?.reason?.message);
+        if (secondPromise?.status === "rejected")
+          throw new Error(secondPromise?.reason?.message);
+      }
 
       const totalLength = secondPromise.value?.length;
       if (totalLength > Number(perPage)) secondPromise.value.pop();

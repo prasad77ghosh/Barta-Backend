@@ -9,8 +9,10 @@ import { generateSlugName } from "../utils";
 class UserController {
   async getAllUser(req: Request, res: Response, next: NextFunction) {
     try {
-      let { perPage, pageNo, searchStr, role } = req.query;
+      let { perPage, pageNo, searchStr, role }: any = req.query;
+      // console.log("SearchStr", searchStr);
       const filterArgs: mongoose.PipelineStage[] = [];
+
       if (searchStr) {
         filterArgs.push({
           $match: {
@@ -36,7 +38,11 @@ class UserController {
 
       const mainArgs: mongoose.PipelineStage[] = [
         {
-          $match: {},
+          $match: {
+            role: {
+              $ne: "ADMIN",
+            },
+          },
         },
         {
           $project: {
@@ -50,13 +56,14 @@ class UserController {
         },
       ];
 
-      const args = [...mainArgs, ...filterArgs];
       const { data, pagination } = await aggregationHelper({
         model: UserSchema,
         perPage,
         pageNo,
-        args,
+        filterArgs,
+        args: mainArgs,
       });
+      console.log({ data });
       res.json({
         success: true,
         msg: "Get all users successfully",

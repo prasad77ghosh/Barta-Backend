@@ -16,7 +16,7 @@ export default class UserRoutes {
   private routes() {
     this.router.get(
       "/",
-      new ProtectedMiddleware().protected,
+      // new ProtectedMiddleware().protected,
       this.userController.getAllUser
     );
 
