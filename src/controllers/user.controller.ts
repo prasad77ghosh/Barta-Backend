@@ -5,13 +5,21 @@ import mongoose from "mongoose";
 import { faker } from "@faker-js/faker";
 import { EncryptAndDecryptService } from "../services/hash.service";
 import { generateSlugName } from "../utils";
+import { MIDDLEWARE_REQUEST_TYPE } from "../types/global";
+import applyRoleFilter from "../functions/users.functions";
 
 class UserController {
-  async getAllUser(req: Request, res: Response, next: NextFunction) {
+  async getAllUser(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      let { perPage, pageNo, searchStr, role }: any = req.query;
-      // console.log("SearchStr", searchStr);
+      let { perPage, pageNo, searchStr, isShomes }: any = req.query;
+      const role = req?.payload?.role;
+
       const filterArgs: mongoose.PipelineStage[] = [];
+      if (role) applyRoleFilter({ isShomes, role, filterArgs });
 
       if (searchStr) {
         filterArgs.push({
@@ -28,21 +36,9 @@ class UserController {
         });
       }
 
-      if (role) {
-        filterArgs.push({
-          $match: {
-            role: role,
-          },
-        });
-      }
-
       const mainArgs: mongoose.PipelineStage[] = [
         {
-          $match: {
-            role: {
-              $ne: "ADMIN",
-            },
-          },
+          $match: {},
         },
         {
           $project: {
@@ -63,7 +59,7 @@ class UserController {
         filterArgs,
         args: mainArgs,
       });
-      console.log({ data });
+
       res.json({
         success: true,
         msg: "Get all users successfully",
@@ -82,13 +78,12 @@ class UserController {
       for (let i = 0; i < numberOfUsers; i++) {
         const role = i % 2 === 0 ? "USER" : "EMPLOYEE";
         const name = faker.person.fullName();
+        const email = faker.internet.email();
         const demoData = {
           role,
           name: name,
-          email: faker.internet.email(),
-          password: await new EncryptAndDecryptService().hashPassword(
-            faker.internet.email()
-          ),
+          email: email,
+          password: await new EncryptAndDecryptService().hashPassword(email),
           slugName: generateSlugName(name),
           profileUrl: faker.image.avatar(),
           profilePath: faker.system.filePath(),
@@ -110,7 +105,7 @@ class UserController {
   async deleteUsers(req: Request, res: Response, next: NextFunction) {
     try {
       await UserSchema.deleteMany({
-        role: "EMPLOYEE",
+        role: "USER",
       });
 
       res.json({

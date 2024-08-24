@@ -1,8 +1,12 @@
 import { Response, Request, NextFunction } from "express";
 import { MIDDLEWARE_REQUEST_TYPE } from "../types/global";
 import { fieldValidateError } from "../helper";
-import { ChatGroupSchema, UserSchema } from "../models";
+import { ChatGroupSchema, MessageSchema, UserSchema } from "../models";
 import { body } from "express-validator";
+import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
+import USER_TYPE from "../types/user";
+import CHAT_GROUP_TYPE from "../types/chat-group";
+import { NotFound, InternalServerError } from "http-errors";
 
 class ChatController {
   async createPrivateChatGroup(
@@ -14,6 +18,21 @@ class ChatController {
       const { receiver } = req.body;
       fieldValidateError(req);
       const admin = req?.payload?.userId;
+
+      //check is private group chat is exist
+      const isGroupAlreadyExist = await ChatGroupSchema.find({
+        isGroupChat: false,
+        members: { $in: [receiver, admin] },
+      });
+
+      if (isGroupAlreadyExist) {
+        return res.json({
+          success: true,
+          data: isGroupAlreadyExist,
+          msg: "Chat group info",
+        });
+      }
+
       const privateChatGroup = await ChatGroupSchema.create({
         name: "Private",
         isGroupChat: false,
@@ -39,6 +58,21 @@ class ChatController {
       const { receiver } = req.body;
       fieldValidateError(req);
       const admin = req?.payload?.userId;
+
+      //check is private group chat is exist
+      const isGroupAlreadyExist = await ChatGroupSchema.findOne({
+        isGroupChat: false,
+        members: { $all: [receiver, admin] },
+      });
+
+      if (isGroupAlreadyExist) {
+        return res.json({
+          success: true,
+          data: isGroupAlreadyExist,
+          msg: "Chat group info",
+        });
+      }
+
       const allAdmin = await UserSchema.find({
         role: "ADMIN",
       });
@@ -59,6 +93,46 @@ class ChatController {
       next(error);
     }
   }
+
+  async createMessagePrivateGroup(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { type, sender, chatGroup, content }: MESSAGE_TYPE = req?.body;
+      fieldValidateError(req);
+      if (
+        type === "DOCUMENT" ||
+        type === "AUDIO" ||
+        type === "IMAGE" ||
+        type === "VIDEO"
+      ) {
+        const fileContent = req?.files?.file;
+        if (!fileContent) throw new NotFound("file content is required");
+      }
+
+      const message = await MessageSchema.create({
+        content,
+        type,
+        sender,
+        chatGroup,
+      });
+
+      if (!message)
+        throw new InternalServerError(
+          "Something went wrong!! message is not created"
+        );
+
+      res.json({
+        success: true,
+        data: message,
+        msg: "Message created successfully..",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const ChatControllerValidator = {
@@ -71,3 +145,5 @@ export const ChatControllerValidator = {
       .withMessage("receiver must be a mongo id"),
   ],
 };
+
+export default ChatController;
