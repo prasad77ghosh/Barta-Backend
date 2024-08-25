@@ -1,39 +1,22 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
-import express, { Application, NextFunction, Request, Response } from "express";
-import cookieParser from "cookie-parser";
+import express, { Application } from "express";
 import ProtectedMiddleware from "../middlewares/protected.middleware";
-import { IncomingMessage } from "http";
-import cookie from "cookie";
-
-// interfaces
-interface ServerToClientEvents {
-  ALERT: () => void;
-}
-
-interface ClientToServerEvents {
-  ALERT: () => void;
-}
+import { ClientToServerEvents, ServerToClientEvents } from "./event";
+import { cookieInfo, corsInfo } from "./info";
+import { joinRoom } from "./function";
+import { v4 as uuid } from "uuid";
 
 class SocketServer {
-  private io: SocketIOServer<ServerToClientEvents, ClientToServerEvents>;
+  private io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
   private app: Application;
   private sockedIds: Map<string, string>;
 
   constructor(server: HttpServer) {
     this.sockedIds = new Map();
     this.io = new SocketIOServer(server, {
-      cors: {
-        origin: ["http://localhost:3000"],
-        methods: ["GET", "POST", "PUT", "DELETE"],
-        credentials: true,
-      },
-      cookie: {
-        name: "io",
-        path: "/",
-        httpOnly: true,
-        sameSite: "lax",
-      },
+      cors: corsInfo,
+      cookie: cookieInfo as any,
     });
     // socket middleware
     this.io.use(async (socket: Socket, next) => {
@@ -54,6 +37,27 @@ class SocketServer {
     const user = (socket as any).user;
     this.sockedIds.set(user?.userId?.toString(), socket.id);
     console.log(`Client connected: ${user.name}`);
+    // room join logic
+    joinRoom({ socket, user, io: this.io });
+
+    socket.on("NEW_MESSAGE", async ({ groupId, message, type }) => {
+      const realTimeMsg = {
+        _id: uuid(),
+        type: type,
+        content: message,
+        chatGroup: groupId,
+        sender: {
+          _id: user?.userId,
+          name: user?.name,
+        },
+      };
+
+      this.io.to(groupId).emit("NEW_MESSAGE", {
+        groupId,
+        message: realTimeMsg,
+      });
+    });
+
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);
     });

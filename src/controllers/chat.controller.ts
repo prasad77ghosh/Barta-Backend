@@ -20,9 +20,9 @@ class ChatController {
       const admin = req?.payload?.userId;
 
       //check is private group chat is exist
-      const isGroupAlreadyExist = await ChatGroupSchema.find({
+      const isGroupAlreadyExist = await ChatGroupSchema.findOne({
         isGroupChat: false,
-        members: { $in: [receiver, admin] },
+        members: { $all: [receiver, admin] },
       });
 
       if (isGroupAlreadyExist) {
@@ -58,6 +58,40 @@ class ChatController {
       const { receiver } = req.body;
       fieldValidateError(req);
       const admin = req?.payload?.userId;
+
+      let isPrivate = false;
+      if (
+        req?.payload?.role === "ADMIN" ||
+        req?.payload?.role === "SUPER_ADMIN"
+      ) {
+        isPrivate = true;
+      }
+
+      if (isPrivate) {
+        const isGroupChatExist = await ChatGroupSchema.findOne({
+          isGroupChat: false,
+          admin: admin,
+          members: { $in: [receiver] },
+        });
+        if (isGroupChatExist) {
+          return res.json({
+            success: true,
+            data: isGroupChatExist,
+            msg: "Chat group info",
+          });
+        }
+        const privateChatGroup = await ChatGroupSchema.create({
+          name: "Private",
+          isGroupChat: false,
+          admin: admin,
+          members: [receiver, admin],
+        });
+        return res.json({
+          success: true,
+          msg: "You are connected",
+          data: privateChatGroup,
+        });
+      }
 
       //check is private group chat is exist
       const isGroupAlreadyExist = await ChatGroupSchema.findOne({
