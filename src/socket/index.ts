@@ -4,7 +4,7 @@ import express, { Application } from "express";
 import ProtectedMiddleware from "../middlewares/protected.middleware";
 import { ClientToServerEvents, ServerToClientEvents } from "./event";
 import { cookieInfo, corsInfo } from "./info";
-import { joinRoom } from "./function";
+import { joinRoom, sendMessage } from "./function";
 import { v4 as uuid } from "uuid";
 
 class SocketServer {
@@ -40,23 +40,8 @@ class SocketServer {
     // room join logic
     joinRoom({ socket, user, io: this.io });
 
-    socket.on("NEW_MESSAGE", async ({ groupId, message, type }) => {
-      const realTimeMsg = {
-        _id: uuid(),
-        type: type,
-        content: message,
-        chatGroup: groupId,
-        sender: {
-          _id: user?.userId,
-          name: user?.name,
-        },
-      };
-
-      this.io.to(groupId).emit("NEW_MESSAGE", {
-        groupId,
-        message: realTimeMsg,
-      });
-    });
+    //send message
+    sendMessage({ socket, user, io: this.io });
 
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);
