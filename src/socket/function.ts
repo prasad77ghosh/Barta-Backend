@@ -1,7 +1,7 @@
 import { Socket, Server as SocketIOServer } from "socket.io";
 import { ClientToServerEvents, ServerToClientEvents } from "./event";
 import { v4 as uuid } from "uuid";
-import { MessageSchema } from "../models";
+import { ChatGroupSchema, MessageSchema } from "../models";
 
 export const joinRoom = ({
   socket,
@@ -46,12 +46,19 @@ export const sendMessage = ({
     });
 
     try {
-      await MessageSchema.create({
+      const lastMsg = await MessageSchema.create({
         content: message,
         type: "TEXT",
         sender: user?.userId,
         chatGroup: groupId,
       });
+
+      if (lastMsg) {
+        await ChatGroupSchema.findByIdAndUpdate(groupId, {
+          updatedAt: new Date(),
+          lastMsg: lastMsg._id,
+        });
+      }
     } catch (error) {
       console.log(error);
     }

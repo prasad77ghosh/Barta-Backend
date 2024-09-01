@@ -29,5 +29,17 @@ export default class ChatRoutes {
       new ProtectedMiddleware().protected,
       this.chatController.createPrivateChatGroupForShomes
     );
+
+    this.router.post(
+      "/create-group",
+      ChatControllerValidator.createChatGroup,
+      // new ProtectedMiddleware().protected,
+      this.chatController.createChatGroup
+    );
+
+    this.router.get(
+      "/get-all-connected",
+      this.chatController.getAllConnectedMembers
+    );
   }
 }

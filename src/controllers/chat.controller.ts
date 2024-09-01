@@ -1,12 +1,18 @@
 import { Response, Request, NextFunction } from "express";
 import { MIDDLEWARE_REQUEST_TYPE } from "../types/global";
-import { fieldValidateError } from "../helper";
-import { ChatGroupSchema, MessageSchema, UserSchema } from "../models";
+import { aggregationHelper, fieldValidateError } from "../helper";
+import {
+  ChatGroupSchema,
+  GroupMemberSchema,
+  MessageSchema,
+  UserSchema,
+} from "../models";
 import { body } from "express-validator";
 import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
 import USER_TYPE from "../types/user";
 import CHAT_GROUP_TYPE from "../types/chat-group";
-import { NotFound, InternalServerError } from "http-errors";
+import { NotFound, InternalServerError, Conflict } from "http-errors";
+import mongoose, { Schema } from "mongoose";
 
 class ChatController {
   async createPrivateChatGroup(
@@ -128,6 +134,56 @@ class ChatController {
     }
   }
 
+  async createChatGroup(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { members, name } = req.body;
+      const userId = req?.payload?.userId;
+      fieldValidateError(req);
+
+      // check if group exist or not
+
+      const isExist = await ChatGroupSchema.findOne({
+        name: name,
+      });
+
+      if (isExist)
+        throw new Conflict("A group is already exist with this name");
+
+      const group = await ChatGroupSchema.create({
+        name: name,
+        admin: userId,
+        isGroupChat: true,
+      });
+
+      if (group) {
+        const memberDocuments = members.map((member: string) => ({
+          group: group._id,
+          member: member,
+        }));
+        await GroupMemberSchema.insertMany(memberDocuments);
+
+        await UserSchema.updateMany(
+          { _id: { $in: members } },
+          {
+            $push: {
+              chatGroups: new mongoose.Types.ObjectId(group._id),
+            },
+          }
+        );
+      }
+      res.json({
+        success: true,
+        msg: "Group created successfully...",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async createMessagePrivateGroup(
     req: MIDDLEWARE_REQUEST_TYPE,
     res: Response,
@@ -167,6 +223,113 @@ class ChatController {
       next(error);
     }
   }
+
+  async getAllConnectedMembers(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { perPage, pageNo, searchStr } = req?.query;
+
+      const userId = req?.payload?.userId;
+      // const userId = "66c9dcb3fd2fb690bf2643ed";
+      const user = await UserSchema.findById(userId)
+        .select("chatGroups")
+        .lean();
+      const userChatGroups = user ? user.chatGroups : [];
+
+      const filterArgs: mongoose.PipelineStage[] = [];
+
+      const mainArgs: mongoose.PipelineStage[] = [
+        {
+          $match: {
+            $or: [
+              {
+                admin: new mongoose.Types.ObjectId(userId),
+              },
+              {
+                members: new mongoose.Types.ObjectId(userId),
+              },
+              {
+                _id: { $in: userChatGroups },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "members",
+            foreignField: "_id",
+            as: "memberDetails",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  role: 1,
+                  name: 1,
+                  email: 1,
+                  isVerified: 1,
+                  slugName: 1,
+                  profileUrl: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "messages",
+            localField: "lastMsg",
+            foreignField: "_id",
+            as: "lastMessage",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  content: 1,
+                  type: 1,
+                  createdAt: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            isGroupChat: 1,
+            admin: 1,
+            profile: 1,
+            memberDetails: 1,
+            lastMessage: { $arrayElemAt: ["$lastMessage", 0] },
+          },
+        },
+        {
+          $sort: { updatedAt: -1 },
+        },
+      ];
+
+      const { data, pagination } = await aggregationHelper({
+        model: ChatGroupSchema,
+        perPage,
+        pageNo,
+        filterArgs,
+        args: mainArgs,
+      });
+
+      res.json({
+        success: true,
+        msg: "get all connected successfully...",
+        data: data,
+        pagination,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const ChatControllerValidator = {
@@ -177,6 +340,21 @@ export const ChatControllerValidator = {
       .bail()
       .isMongoId()
       .withMessage("receiver must be a mongo id"),
+  ],
+  createChatGroup: [
+    body("name").notEmpty().withMessage("Name is required"),
+    body("members")
+      .notEmpty()
+      .withMessage("members is required")
+      .bail()
+      .isArray({ min: 1 })
+      .withMessage("Ids should be an array with at least one element.")
+      .custom((value) => {
+        return value.every((id: string) => {
+          return /^[0-9a-fA-F]{24}$/.test(id);
+        });
+      })
+      .withMessage("All elements in ids must be valid MongoDB ObjectIDs."),
   ],
 };
 

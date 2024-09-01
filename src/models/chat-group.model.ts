@@ -30,7 +30,12 @@ const chatGroupSchema = new Schema<CHAT_GROUP_TYPE, Model<CHAT_GROUP_TYPE>>(
         ref: "User",
       },
     ],
+    lastMsg: {
+      type: Schema.Types.ObjectId,
+      ref: "Message",
+    },
   },
+
   {
     timestamps: true,
   }

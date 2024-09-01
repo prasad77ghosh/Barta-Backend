@@ -68,6 +68,12 @@ const userSchema = new Schema<USER_TYPE, Model<USER_TYPE>>(
       type: Boolean,
       default: false,
     },
+    chatGroups: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ChatGroup",
+      },
+    ],
     fcmToken: {
       android: {
         type: String,

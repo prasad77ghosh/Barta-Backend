@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+import CHAT_GROUP_TYPE from "./chat-group";
 export type FCMToken = {
   web?: string;
   android?: string;
@@ -22,6 +23,7 @@ export default interface USER_TYPE extends Document {
   isVerified: boolean;
   hashOtp?: string;
   otpExpire?: Date;
+  chatGroups: CHAT_GROUP_TYPE[];
   refreshToken?: string;
   fcmToken: FCMToken;
 }
