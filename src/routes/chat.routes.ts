@@ -33,12 +33,13 @@ export default class ChatRoutes {
     this.router.post(
       "/create-group",
       ChatControllerValidator.createChatGroup,
-      // new ProtectedMiddleware().protected,
+      new ProtectedMiddleware().protected,
       this.chatController.createChatGroup
     );
 
     this.router.get(
       "/get-all-connected",
+      new ProtectedMiddleware().protected,
       this.chatController.getAllConnectedMembers
     );
   }

@@ -57,6 +57,7 @@ export const sendMessage = ({
         await ChatGroupSchema.findByIdAndUpdate(groupId, {
           updatedAt: new Date(),
           lastMsg: lastMsg._id,
+          isMessaged: true,
         });
       }
     } catch (error) {

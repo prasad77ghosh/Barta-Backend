@@ -7,6 +7,10 @@ const chatGroupSchema = new Schema<CHAT_GROUP_TYPE, Model<CHAT_GROUP_TYPE>>(
       type: String,
       trim: true,
     },
+    isMessaged: {
+      type: Boolean,
+      default: false,
+    },
     isGroupChat: {
       type: Boolean,
       default: false,

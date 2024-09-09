@@ -244,15 +244,24 @@ class ChatController {
       const mainArgs: mongoose.PipelineStage[] = [
         {
           $match: {
-            $or: [
+            $and: [
               {
-                admin: new mongoose.Types.ObjectId(userId),
+                $or: [
+                  {
+                    admin: new mongoose.Types.ObjectId(userId),
+                  },
+                  {
+                    members: new mongoose.Types.ObjectId(userId),
+                  },
+                  {
+                    _id: { $in: userChatGroups },
+                  },
+                ],
               },
               {
-                members: new mongoose.Types.ObjectId(userId),
-              },
-              {
-                _id: { $in: userChatGroups },
+                lastMsg: {
+                  $exists: true,
+                },
               },
             ],
           },
@@ -297,18 +306,41 @@ class ChatController {
           },
         },
         {
+          $lookup: {
+            from: "users",
+            localField: "admin",
+            foreignField: "_id",
+            as: "AdminInfo",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  email: 1,
+                  slugName: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
           $project: {
             _id: 1,
             name: 1,
             isGroupChat: 1,
-            admin: 1,
             profile: 1,
             memberDetails: 1,
             lastMessage: { $arrayElemAt: ["$lastMessage", 0] },
+            admin: { $arrayElemAt: ["$AdminInfo", 0] },
+            createdAt: 1,
+            updatedAt: 1,
           },
         },
         {
-          $sort: { updatedAt: -1 },
+          $sort: {
+            updatedAt: -1,
+            createdAt: -1,
+          },
         },
       ];
 

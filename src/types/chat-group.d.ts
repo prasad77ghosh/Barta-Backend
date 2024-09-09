@@ -13,4 +13,5 @@ export default interface CHAT_GROUP_TYPE extends Document {
   members: USER_TYPE[];
   profile: PROFILE_TYPE;
   lastMsg: MESSAGE_TYPE;
+  isMessaged: boolean;
 }
