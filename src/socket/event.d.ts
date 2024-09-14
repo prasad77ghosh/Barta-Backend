@@ -13,6 +13,16 @@ export interface ServerToClientEvents {
     groupName: string;
   }) => void;
 
+  LEAVE_ROOM: ({
+    groupId,
+    isPrivateGroup,
+    groupName,
+  }: {
+    groupId: string;
+    isPrivateGroup: boolean;
+    groupName: string;
+  }) => void;
+
   NEW_MESSAGE: ({
     groupId,
     message,
@@ -25,6 +35,16 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   ALERT: (message: string) => void;
   JOIN_ROOM: ({
+    groupId,
+    isPrivateGroup,
+    groupName,
+  }: {
+    groupId: string;
+    isPrivateGroup: boolean;
+    groupName: string;
+  }) => void;
+
+  LEAVE_ROOM: ({
     groupId,
     isPrivateGroup,
     groupName,

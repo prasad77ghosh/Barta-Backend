@@ -4,7 +4,7 @@ import express, { Application } from "express";
 import ProtectedMiddleware from "../middlewares/protected.middleware";
 import { ClientToServerEvents, ServerToClientEvents } from "./event";
 import { cookieInfo, corsInfo } from "./info";
-import { joinRoom, sendMessage } from "./function";
+import { joinRoom, leaveRoom, sendMessage } from "./function";
 import { v4 as uuid } from "uuid";
 
 class SocketServer {
@@ -39,6 +39,7 @@ class SocketServer {
     console.log(`Client connected: ${user.name}`);
     // room join logic
     joinRoom({ socket, user, io: this.io });
+    leaveRoom({ socket, user, io: this.io });
 
     //send message
     sendMessage({ socket, user, io: this.io });

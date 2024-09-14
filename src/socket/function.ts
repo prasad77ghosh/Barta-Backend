@@ -18,6 +18,21 @@ export const joinRoom = ({
   });
 };
 
+export const leaveRoom = ({
+  socket,
+  user,
+  io,
+}: {
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>;
+  user: any;
+  io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
+}) => {
+  socket.on("LEAVE_ROOM", async ({ groupId, isPrivateGroup, groupName }) => {
+    socket.leave(groupId);
+    io.to(groupId).emit("ALERT", `${user?.name} is leave the ${groupName}`);
+  });
+};
+
 export const sendMessage = ({
   io,
   user,

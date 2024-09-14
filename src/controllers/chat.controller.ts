@@ -233,10 +233,12 @@ class ChatController {
       const { perPage, pageNo, searchStr } = req?.query;
 
       const userId = req?.payload?.userId;
-      // const userId = "66c9dcb3fd2fb690bf2643ed";
       const user = await UserSchema.findById(userId)
         .select("chatGroups")
         .lean();
+
+      fieldValidateError(req);
+
       const userChatGroups = user ? user.chatGroups : [];
 
       const filterArgs: mongoose.PipelineStage[] = [];
@@ -362,6 +364,72 @@ class ChatController {
       next(error);
     }
   }
+
+  async getAllMessagesOfGroup(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { groupId } = req.body;
+      const { perPage, pageNo, searchStr } = req.query;
+      fieldValidateError(req);
+
+      const filterArgs: mongoose.PipelineStage[] = [];
+      const mainArgs: mongoose.PipelineStage[] = [
+        {
+          $match: {
+            chatGroup: new mongoose.Types.ObjectId(groupId),
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "sender",
+            foreignField: "_id",
+            as: "Sender",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  email: 1,
+                  slogName: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            type: 1,
+            attachments: 1,
+            content: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            sender: { $arrayElemAt: ["$Sender", 0] },
+          },
+        },
+      ];
+
+      const { data, pagination } = await aggregationHelper({
+        model: MessageSchema,
+        perPage,
+        pageNo,
+        filterArgs,
+        args: mainArgs,
+      });
+
+      res.json({
+        success: true,
+        data,
+        pagination,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const ChatControllerValidator = {
@@ -387,6 +455,16 @@ export const ChatControllerValidator = {
         });
       })
       .withMessage("All elements in ids must be valid MongoDB ObjectIDs."),
+  ],
+
+  getAllMessagesOfGroup: [
+    body("groupId")
+      .notEmpty()
+      .withMessage("groupId id required")
+      .bail()
+      .isMongoId()
+      .isMongoId()
+      .withMessage("groupId must be a mongo id"),
   ],
 };
 

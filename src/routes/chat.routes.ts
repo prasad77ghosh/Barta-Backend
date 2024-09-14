@@ -42,5 +42,12 @@ export default class ChatRoutes {
       new ProtectedMiddleware().protected,
       this.chatController.getAllConnectedMembers
     );
+
+    this.router.get(
+      "/get-all-chats",
+      ChatControllerValidator.getAllMessagesOfGroup,
+      new ProtectedMiddleware().protected,
+      this.chatController.getAllMessagesOfGroup
+    );
   }
 }
