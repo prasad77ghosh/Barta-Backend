@@ -2,7 +2,7 @@ import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
 
 export interface ServerToClientEvents {
   ALERT: (message: string) => void;
-  DEMO: (message: string) => void;
+  LEAVE_ALERT: (message: string) => void;
 
   JOIN_ROOM: ({
     groupId,
@@ -25,6 +25,14 @@ export interface ServerToClientEvents {
   }) => void;
 
   NEW_MESSAGE: ({
+    groupId,
+    message,
+  }: {
+    groupId: string;
+    message: any;
+  }) => void;
+
+  FIRST_TIME_MESSAGE: ({
     groupId,
     message,
   }: {
@@ -62,9 +70,13 @@ export interface ClientToServerEvents {
     groupId,
     type,
     message,
+    isFirstTime,
+    members,
   }: {
     groupId: string;
     type: MSG_TYPE;
     message: any;
+    isFirstTime: boolean;
+    members?: string[];
   }) => void;
 }

@@ -45,12 +45,18 @@ class SocketServer {
       user,
       io: this.io,
       roomMembers: this.roomMembers,
-      sockedIds: this.sockedIds,
+      socketIds: this.sockedIds,
     });
     leaveRoom({ socket, user, io: this.io });
 
     //send message
-    sendMessage({ socket, user, io: this.io });
+    sendMessage({
+      socket,
+      user,
+      io: this.io,
+      roomMembers: this.roomMembers,
+      socketIds: this.sockedIds,
+    });
 
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);
