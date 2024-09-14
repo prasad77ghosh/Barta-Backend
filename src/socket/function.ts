@@ -7,15 +7,39 @@ export const joinRoom = ({
   socket,
   user,
   io,
+  roomMembers,
+  sockedIds,
 }: {
   socket: Socket<ClientToServerEvents, ServerToClientEvents>;
   user: any;
   io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
+  roomMembers: any;
+  sockedIds: any;
 }) => {
-  socket.on("JOIN_ROOM", async ({ groupId, isPrivateGroup, groupName }) => {
-    socket.join(groupId);
-    io.to(groupId).emit("ALERT", `${user?.name} is active in ${groupName}`);
-  });
+  socket.on(
+    "JOIN_ROOM",
+    async ({ groupId, isPrivateGroup, groupName, members }) => {
+      console.log("MEMBERS", members);
+      socket.join(groupId);
+      roomMembers.set(groupId, user?.userId);
+      socket
+        .to(groupId)
+        .emit("ALERT", `${user?.name} is active in ${groupName}`);
+
+      //filter all the members who are not active in the group
+      const allRoomMembers = Array.from(roomMembers.values());
+      const allInActiveRoomMembers = members.filter(
+        (member) => !allRoomMembers.includes(member)
+      );
+      const filteredSocketIds = allInActiveRoomMembers
+        .map((key) => sockedIds.get(key))
+        .filter(Boolean);
+
+      socket
+        .to(filteredSocketIds)
+        .emit("ALERT", `${user?.name} is active in ${groupName}`);
+    }
+  );
 };
 
 export const leaveRoom = ({

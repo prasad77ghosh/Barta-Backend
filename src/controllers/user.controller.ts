@@ -7,6 +7,7 @@ import { EncryptAndDecryptService } from "../services/hash.service";
 import { generateSlugName } from "../utils";
 import { MIDDLEWARE_REQUEST_TYPE } from "../types/global";
 import applyRoleFilter from "../functions/users.functions";
+import { fieldValidateError } from "../helper";
 
 class UserController {
   async getAllUser(
@@ -17,6 +18,8 @@ class UserController {
     try {
       let { perPage, pageNo, searchStr, isShomes }: any = req.query;
       const role = req?.payload?.role;
+
+      fieldValidateError(req);
 
       const filterArgs: mongoose.PipelineStage[] = [];
       if (role) applyRoleFilter({ isShomes, role, filterArgs });

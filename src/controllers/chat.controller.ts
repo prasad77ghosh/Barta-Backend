@@ -239,7 +239,7 @@ class ChatController {
 
       fieldValidateError(req);
 
-      const userChatGroups = user ? user.chatGroups : [];
+      const userChatGroups = user && user?.chatGroups ? user.chatGroups : [];
 
       const filterArgs: mongoose.PipelineStage[] = [];
 
@@ -330,6 +330,7 @@ class ChatController {
             _id: 1,
             name: 1,
             isGroupChat: 1,
+            isMessaged: 1,
             profile: 1,
             memberDetails: 1,
             lastMessage: { $arrayElemAt: ["$lastMessage", 0] },

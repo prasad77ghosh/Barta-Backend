@@ -2,6 +2,7 @@ import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
 
 export interface ServerToClientEvents {
   ALERT: (message: string) => void;
+  DEMO: (message: string) => void;
 
   JOIN_ROOM: ({
     groupId,
@@ -30,6 +31,8 @@ export interface ServerToClientEvents {
     groupId: string;
     message: any;
   }) => void;
+
+  NEW_MESSAGE_ALERT: ({ groupId }: { groupId: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -38,10 +41,12 @@ export interface ClientToServerEvents {
     groupId,
     isPrivateGroup,
     groupName,
+    members,
   }: {
     groupId: string;
     isPrivateGroup: boolean;
     groupName: string;
+    members: string[];
   }) => void;
 
   LEAVE_ROOM: ({

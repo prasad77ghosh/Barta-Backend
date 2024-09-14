@@ -11,9 +11,11 @@ class SocketServer {
   private io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
   private app: Application;
   private sockedIds: Map<string, string>;
+  private roomMembers: Map<string, string>;
 
   constructor(server: HttpServer) {
     this.sockedIds = new Map();
+    this.roomMembers = new Map();
     this.io = new SocketIOServer(server, {
       cors: corsInfo,
       cookie: cookieInfo as any,
@@ -36,9 +38,15 @@ class SocketServer {
   ) => {
     const user = (socket as any).user;
     this.sockedIds.set(user?.userId?.toString(), socket.id);
-    console.log(`Client connected: ${user.name}`);
+    console.log(`Client connected: ${socket.id}, ${user.name}`);
     // room join logic
-    joinRoom({ socket, user, io: this.io });
+    joinRoom({
+      socket,
+      user,
+      io: this.io,
+      roomMembers: this.roomMembers,
+      sockedIds: this.sockedIds,
+    });
     leaveRoom({ socket, user, io: this.io });
 
     //send message
