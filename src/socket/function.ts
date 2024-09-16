@@ -96,11 +96,14 @@ export const sendMessage = ({
         type: type,
         content: message,
         chatGroup: groupId,
+        attachments: [],
         sender: {
           _id: user?.userId,
           name: user?.name,
+          email: user?.email,
         },
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       io.to(groupId).emit("NEW_MESSAGE", {
@@ -109,15 +112,7 @@ export const sendMessage = ({
       });
 
       try {
-        const lastMsg = await MessageSchema.create({
-          content: message,
-          type: "TEXT",
-          sender: user?.userId,
-          chatGroup: groupId,
-        });
-
         if (isFirstTime && members) {
-          console.log("COMING In side ...............>>>>>>>>>>");
           const filteredSocketIds =
             filterAllGroupMembersWhoAreNotActiveInGroups({
               members,
@@ -130,6 +125,13 @@ export const sendMessage = ({
             message: realTimeMsg,
           });
         }
+
+        const lastMsg = await MessageSchema.create({
+          content: message,
+          type: "TEXT",
+          sender: user?.userId,
+          chatGroup: groupId,
+        });
 
         if (lastMsg) {
           await ChatGroupSchema.findByIdAndUpdate(groupId, {

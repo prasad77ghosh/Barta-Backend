@@ -7,7 +7,7 @@ import {
   MessageSchema,
   UserSchema,
 } from "../models";
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
 import USER_TYPE from "../types/user";
 import CHAT_GROUP_TYPE from "../types/chat-group";
@@ -372,7 +372,7 @@ class ChatController {
     next: NextFunction
   ) {
     try {
-      const { groupId } = req.body;
+      const { groupId } = req.params;
       const { perPage, pageNo, searchStr } = req.query;
       fieldValidateError(req);
 
@@ -407,9 +407,16 @@ class ChatController {
             type: 1,
             attachments: 1,
             content: 1,
+            chatGroup: 1,
             createdAt: 1,
             updatedAt: 1,
             sender: { $arrayElemAt: ["$Sender", 0] },
+          },
+        },
+        {
+          $sort: {
+            updatedAt: -1,
+            createdAt: -1,
           },
         },
       ];
@@ -459,7 +466,7 @@ export const ChatControllerValidator = {
   ],
 
   getAllMessagesOfGroup: [
-    body("groupId")
+    param("groupId")
       .notEmpty()
       .withMessage("groupId id required")
       .bail()

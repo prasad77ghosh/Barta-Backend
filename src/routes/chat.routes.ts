@@ -44,7 +44,7 @@ export default class ChatRoutes {
     );
 
     this.router.get(
-      "/get-all-chats",
+      "/get-all-chats/:groupId",
       ChatControllerValidator.getAllMessagesOfGroup,
       new ProtectedMiddleware().protected,
       this.chatController.getAllMessagesOfGroup
