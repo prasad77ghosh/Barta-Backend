@@ -7,15 +7,12 @@ class TopMiddleWare {
     // handling JSON data
     app.use(express.json());
     // handling file upload in app
-    app.use(
-      fileUpload({
-        useTempFiles: true,
-      })
-    );
+    app.use(fileUpload());
     //handling form data
     app.use(express.urlencoded({ extended: true }));
     //cors
     app.use(this.allowCrossDomain);
+    app.use(this.cacheClear);
     app.use(cookieParser());
     //socket io middleware
   }
@@ -47,6 +44,12 @@ class TopMiddleWare {
       return res.status(200).json({});
     }
 
+    next();
+  }
+  private cacheClear(req: Request, res: Response, next: NextFunction) {
+    res.header("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.header("Pragma", "no-cache");
+    res.header("Expires", "0");
     next();
   }
 }

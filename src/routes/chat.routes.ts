@@ -49,5 +49,11 @@ export default class ChatRoutes {
       new ProtectedMiddleware().protected,
       this.chatController.getAllMessagesOfGroup
     );
+
+    this.router.post(
+      "/send-media",
+      new ProtectedMiddleware().protected,
+      this.chatController.sendMedia
+    );
   }
 }

@@ -11,8 +11,18 @@ import { body, param } from "express-validator";
 import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
 import USER_TYPE from "../types/user";
 import CHAT_GROUP_TYPE from "../types/chat-group";
-import { NotFound, InternalServerError, Conflict } from "http-errors";
+import {
+  NotFound,
+  InternalServerError,
+  Conflict,
+  NotAcceptable,
+} from "http-errors";
 import mongoose, { Schema } from "mongoose";
+import { v4 as uuid } from "uuid";
+import { MediaStoreService } from "../services/media.service";
+import SocketServer from "../socket";
+import App from "../app";
+import { getSocketInfo } from "../functions/chat.functions";
 
 class ChatController {
   async createPrivateChatGroup(
@@ -433,6 +443,111 @@ class ChatController {
         success: true,
         data,
         pagination,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async sendMedia(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { groupId, groupName, content, type } = req?.body;
+      const sender = req?.payload?.userId;
+      const medias: any = req?.files?.files;
+
+      const group = await ChatGroupSchema.findById(groupId);
+
+      if ((Array.isArray(medias) && medias.length === 0) || !medias) {
+        throw new NotAcceptable("Minimum 1 image is required");
+      }
+      if (Array.isArray(medias) && medias.length > 5) {
+        throw new NotAcceptable("Maximum you can give 5 images");
+      }
+
+      const attachments: any[] = [];
+      if (Array.isArray(medias)) {
+        await Promise.all(
+          medias.map(async (media) => {
+            if (media) {
+              const attachment = (await new MediaStoreService().upload({
+                files: media,
+                folder: `${groupName}-${groupId}`,
+              })) as {
+                key: string;
+                Location: string;
+              };
+
+              if (attachment) {
+                attachments.push({
+                  mediaPath: attachment?.Location,
+                  mediaUrl: attachment?.key,
+                });
+              }
+            }
+          })
+        );
+      } else {
+        const attachment = (await new MediaStoreService().upload({
+          files: medias,
+          folder: `${groupName}-${groupId}`,
+        })) as {
+          key: string;
+          Location: string;
+        };
+
+        if (attachment) {
+          attachments.push({
+            mediaPath: attachment?.Location,
+            mediaUrl: attachment?.key,
+          });
+        }
+      }
+
+      // send media files
+
+      const messageForRealTime: any = {
+        _id: uuid(),
+        type: type,
+        content: content,
+        chatGroup: groupId,
+        attachments: attachments,
+        sender: {
+          _id: sender,
+          name: req?.payload?.name,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const messageForDB: any = {
+        type: type,
+        content: content,
+        chatGroup: groupId,
+        attachments: attachments,
+        sender,
+      };
+
+      // const server = App.server;
+      // const instance = SocketServer.getInstance(server);
+      // const io = instance.getIO();
+      // const socketIds = instance.getSocketIds();
+      // const roomMembers = instance.getRoomMembers();
+      const { io } = getSocketInfo();
+
+      io.to(groupId).emit("NEW_MESSAGE", {
+        groupId,
+        message: messageForRealTime,
+      });
+
+      const message = await MessageSchema.create(messageForDB);
+
+      res.json({
+        success: true,
+        msg: "file send successfully..",
+        data: message,
       });
     } catch (error) {
       next(error);

@@ -9,10 +9,10 @@ const messageSchema = new Schema<MESSAGE_TYPE, Model<MESSAGE_TYPE>>(
     },
     attachments: [
       {
-        profileUrl: {
+        mediaPath: {
           type: String,
         },
-        profilePath: {
+        mediaUrl: {
           type: String,
         },
       },
