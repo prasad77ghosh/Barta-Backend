@@ -52,7 +52,13 @@ class SocketServer {
     });
 
     // Room leave logic
-    leaveRoom({ socket, user, io: this.io });
+    leaveRoom({
+      socket,
+      user,
+      io: this.io,
+      roomMembers: this.roomMembers,
+      socketIds: this.socketIds,
+    });
 
     // Send message logic
     sendMessage({

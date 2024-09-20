@@ -3,6 +3,21 @@ import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
 export interface ServerToClientEvents {
   ALERT: (message: string) => void;
   LEAVE_ALERT: (message: string) => void;
+  USER_ONLINE: ({
+    groupId,
+    userId,
+  }: {
+    groupId: string;
+    userId: string;
+  }) => void;
+
+  USER_OFFLINE: ({
+    groupId,
+    userId,
+  }: {
+    groupId: string;
+    userId: string;
+  }) => void;
 
   JOIN_ROOM: ({
     groupId,

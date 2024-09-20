@@ -530,11 +530,7 @@ class ChatController {
         sender,
       };
 
-      // const server = App.server;
-      // const instance = SocketServer.getInstance(server);
-      // const io = instance.getIO();
-      // const socketIds = instance.getSocketIds();
-      // const roomMembers = instance.getRoomMembers();
+      
       const { io } = getSocketInfo();
 
       io.to(groupId).emit("NEW_MESSAGE", {
