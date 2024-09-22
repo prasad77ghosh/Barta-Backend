@@ -77,6 +77,8 @@ class SocketServer {
           this.socketIds.delete(key);
         }
       });
+      const updatedOnlineUsers: string[] = Array.from(this.socketIds.keys());
+      this.io.emit("ONLINE_USERS", updatedOnlineUsers);
     });
   };
 

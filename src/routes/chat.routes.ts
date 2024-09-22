@@ -44,6 +44,13 @@ export default class ChatRoutes {
     );
 
     this.router.get(
+      "/get-private-group-info/:groupId",
+      new ProtectedMiddleware().protected,
+      ChatControllerValidator.getPrivateGroupInfoById,
+      this.chatController.getPrivateGroupInfoById
+    );
+
+    this.router.get(
       "/get-all-chats/:groupId",
       ChatControllerValidator.getAllMessagesOfGroup,
       new ProtectedMiddleware().protected,

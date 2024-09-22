@@ -3,21 +3,30 @@ import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
 export interface ServerToClientEvents {
   ALERT: (message: string) => void;
   LEAVE_ALERT: (message: string) => void;
-  USER_ONLINE: ({
-    groupId,
-    userId,
-  }: {
-    groupId: string;
-    userId: string;
-  }) => void;
+  ONLINE_USERS: (users: string[]) => void;
+  // USER_ONLINE: ({
+  //   groupId,
+  //   userId,
+  //   name,
+  //   role,
+  // }: {
+  //   groupId: string;
+  //   userId: string;
+  //   name?: string;
+  //   role?: string;
+  // }) => void;
 
-  USER_OFFLINE: ({
-    groupId,
-    userId,
-  }: {
-    groupId: string;
-    userId: string;
-  }) => void;
+  // USER_OFFLINE: ({
+  //   groupId,
+  //   userId,
+  //   name,
+  //   role,
+  // }: {
+  //   groupId: string;
+  //   userId: string;
+  //   name?: string;
+  //   role?: string;
+  // }) => void;
 
   JOIN_ROOM: ({
     groupId,
@@ -60,6 +69,7 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   ALERT: (message: string) => void;
+
   JOIN_ROOM: ({
     groupId,
     isPrivateGroup,

@@ -39,8 +39,6 @@ export const joinRoom = ({
   socket.on(
     "JOIN_ROOM",
     async ({ groupId, isPrivateGroup, groupName, members }) => {
-      console.log(`${user?.name} is join in ${groupName}-${groupId}`);
-
       socket.join(groupId);
       roomMembers.set(groupId, user?.userId);
       socket
@@ -53,11 +51,9 @@ export const joinRoom = ({
         socketIds,
         roomMembers,
       });
-      socket
-        .to(filteredSocketIds)
-        .emit("ALERT", `${user?.name} is active in ${groupName}`);
 
-      socket.to(groupId).emit("USER_ONLINE", { groupId, userId: user?.userId });
+      const onlineUsers: string[] = Array.from(socketIds.keys());
+      io.to(groupId).emit("ONLINE_USERS", onlineUsers);
     }
   );
 };
@@ -76,15 +72,17 @@ export const leaveRoom = ({
   socketIds: any;
 }) => {
   socket.on("LEAVE_ROOM", async ({ groupId, isPrivateGroup, groupName }) => {
-    console.log(`${user?.name} is leave  ${groupName}-${groupId}`);
     socket.leave(groupId);
     roomMembers.delete(groupId);
+    console.log(
+      `LEAVE_ROOM------------------->${user?.name} is leave the ${groupName}`
+    );
     socket
       .to(groupId)
       .emit("LEAVE_ALERT", `${user?.name} is leave the ${groupName}`);
-    socket
-      .to(groupId)
-      .emit("USER_OFFLINE", { groupId: groupId, userId: user?.userId });
+
+    const onlineUsers: string[] = Array.from(socketIds.keys());
+    io.to(groupId).emit("ONLINE_USERS", onlineUsers);
   });
 };
 

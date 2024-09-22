@@ -530,7 +530,6 @@ class ChatController {
         sender,
       };
 
-      
       const { io } = getSocketInfo();
 
       io.to(groupId).emit("NEW_MESSAGE", {
@@ -544,6 +543,28 @@ class ChatController {
         success: true,
         msg: "file send successfully..",
         data: message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getPrivateGroupInfoById(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { groupId } = req?.params;
+      fieldValidateError(req);
+      const group = await ChatGroupSchema.findById(groupId).populate(
+        "members",
+        "name email _id role"
+      );
+      res.json({
+        success: true,
+        msg: "get group info successfully....",
+        data: group,
       });
     } catch (error) {
       next(error);
@@ -575,13 +596,19 @@ export const ChatControllerValidator = {
       })
       .withMessage("All elements in ids must be valid MongoDB ObjectIDs."),
   ],
-
   getAllMessagesOfGroup: [
     param("groupId")
       .notEmpty()
       .withMessage("groupId id required")
       .bail()
       .isMongoId()
+      .withMessage("groupId must be a mongo id"),
+  ],
+  getPrivateGroupInfoById: [
+    param("groupId")
+      .notEmpty()
+      .withMessage("groupId is required")
+      .bail()
       .isMongoId()
       .withMessage("groupId must be a mongo id"),
   ],
