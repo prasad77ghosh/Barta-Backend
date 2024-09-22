@@ -4,29 +4,26 @@ export interface ServerToClientEvents {
   ALERT: (message: string) => void;
   LEAVE_ALERT: (message: string) => void;
   ONLINE_USERS: (users: string[]) => void;
-  // USER_ONLINE: ({
-  //   groupId,
-  //   userId,
-  //   name,
-  //   role,
-  // }: {
-  //   groupId: string;
-  //   userId: string;
-  //   name?: string;
-  //   role?: string;
-  // }) => void;
 
-  // USER_OFFLINE: ({
-  //   groupId,
-  //   userId,
-  //   name,
-  //   role,
-  // }: {
-  //   groupId: string;
-  //   userId: string;
-  //   name?: string;
-  //   role?: string;
-  // }) => void;
+  START_TYPING: ({
+    groupId,
+    userId,
+    name,
+  }: {
+    groupId: string;
+    userId: string;
+    name: string;
+  }) => void;
+
+  STOP_TYPING: ({
+    groupId,
+    userId,
+    name,
+  }: {
+    groupId: string;
+    userId: string;
+    name: string;
+  }) => void;
 
   JOIN_ROOM: ({
     groupId,
@@ -69,6 +66,26 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   ALERT: (message: string) => void;
+
+  START_TYPING: ({
+    groupId,
+    userId,
+    name,
+  }: {
+    groupId: string;
+    userId: string;
+    name: string;
+  }) => void;
+
+  STOP_TYPING: ({
+    groupId,
+    userId,
+    name,
+  }: {
+    groupId: string;
+    userId: string;
+    name: string;
+  }) => void;
 
   JOIN_ROOM: ({
     groupId,

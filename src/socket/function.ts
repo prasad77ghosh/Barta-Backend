@@ -86,6 +86,42 @@ export const leaveRoom = ({
   });
 };
 
+export const startTyping = ({
+  socket,
+  user,
+  io,
+  roomMembers,
+  socketIds,
+}: {
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>;
+  user: any;
+  io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
+  roomMembers: any;
+  socketIds: any;
+}) => {
+  socket.on("START_TYPING", ({ groupId, userId, name }) => {
+    io.to(groupId).emit("START_TYPING", { groupId, userId, name });
+  });
+};
+
+export const stopTyping = ({
+  socket,
+  user,
+  io,
+  roomMembers,
+  socketIds,
+}: {
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>;
+  user: any;
+  io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
+  roomMembers: any;
+  socketIds: any;
+}) => {
+  socket.on("STOP_TYPING", ({ groupId, userId, name }) => {
+    io.to(groupId).emit("STOP_TYPING", { groupId, userId, name });
+  });
+};
+
 export const sendMessage = ({
   io,
   user,

@@ -4,7 +4,13 @@ import express, { Application } from "express";
 import ProtectedMiddleware from "../middlewares/protected.middleware";
 import { ClientToServerEvents, ServerToClientEvents } from "./event";
 import { cookieInfo, corsInfo } from "./info";
-import { joinRoom, leaveRoom, sendMessage } from "./function";
+import {
+  joinRoom,
+  leaveRoom,
+  sendMessage,
+  startTyping,
+  stopTyping,
+} from "./function";
 
 class SocketServer {
   private io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
@@ -41,6 +47,24 @@ class SocketServer {
     const user = (socket as any).user;
     this.socketIds.set(user?.userId?.toString(), socket.id);
     console.log(`Client connected: ${socket.id}, ${user.name}`);
+
+    //start typing....
+    startTyping({
+      socket,
+      user,
+      io: this.io,
+      roomMembers: this.roomMembers,
+      socketIds: this.socketIds,
+    });
+
+    // stop typing
+    stopTyping({
+      socket,
+      user,
+      io: this.io,
+      roomMembers: this.roomMembers,
+      socketIds: this.socketIds,
+    });
 
     // Room join logic
     joinRoom({
