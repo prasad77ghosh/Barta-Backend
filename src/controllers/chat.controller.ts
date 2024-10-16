@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { MIDDLEWARE_REQUEST_TYPE } from "../types/global";
 import { aggregationHelper, fieldValidateError } from "../helper";
 import {
@@ -8,20 +8,16 @@ import {
   UserSchema,
 } from "../models";
 import { body, param } from "express-validator";
-import MESSAGE_TYPE, { MSG_TYPE } from "../types/message";
-import USER_TYPE from "../types/user";
-import CHAT_GROUP_TYPE from "../types/chat-group";
+import MESSAGE_TYPE from "../types/message";
 import {
   NotFound,
   InternalServerError,
   Conflict,
   NotAcceptable,
 } from "http-errors";
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 import { v4 as uuid } from "uuid";
 import { MediaStoreService } from "../services/media.service";
-import SocketServer from "../socket";
-import App from "../app";
 import { getSocketInfo } from "../functions/chat.functions";
 
 class ChatController {
@@ -134,6 +130,42 @@ class ChatController {
         isGroupChat: false,
         admin,
       });
+
+      const senderUser = await UserSchema.findById(receiver);
+      if (
+        privateGroupOfShomes &&
+        senderUser &&
+        senderUser?.role === "EMPLOYEE"
+      ) {
+        const messageForRealTime: any = {
+          _id: uuid(),
+          type: "TEXT",
+          content: "Welcome to SHomes.",
+          chatGroup: privateGroupOfShomes?._id,
+          sender: {
+            _id: senderUser?._id,
+            name: senderUser?.name,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const messageForDB: any = {
+          type: "TEXT",
+          content: "Welcome to SHomes.",
+          chatGroup: privateGroupOfShomes?._id,
+          sender: senderUser?._id,
+        };
+
+        const { io } = getSocketInfo();
+
+        io.to(privateGroupOfShomes?._id).emit("NEW_MESSAGE", {
+          groupId: privateGroupOfShomes?._id,
+          message: messageForRealTime,
+        });
+
+        // create message
+        await MessageSchema.create(messageForDB);
+      }
       res.json({
         success: true,
         msg: "shomes private group create successfully...",
@@ -412,6 +444,14 @@ class ChatController {
           },
         },
         {
+          $lookup: {
+            from: "messages",
+            localField: "parentMessage",
+            foreignField: "_id",
+            as: "parentMessage",
+          },
+        },
+        {
           $project: {
             _id: 1,
             type: 1,
@@ -421,6 +461,9 @@ class ChatController {
             createdAt: 1,
             updatedAt: 1,
             sender: { $arrayElemAt: ["$Sender", 0] },
+            isReplyMsg: 1,
+            parentMsgContent: { $arrayElemAt: ["$parentMessage.content", 0] },
+            parentMsgId: { $arrayElemAt: ["$parentMessage._id", 0] },
           },
         },
         {
@@ -570,6 +613,60 @@ class ChatController {
       next(error);
     }
   }
+
+  async replyMessage(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { parentMsgId, groupId, content, parentMsgContent } = req.body;
+      const name = req?.payload?.name;
+      const senderId = req?.payload?.userId;
+      fieldValidateError(req);
+      const messageForRealTime: any = {
+        _id: uuid(),
+        type: "TEXT",
+        content: content,
+        chatGroup: groupId,
+        sender: {
+          _id: senderId,
+          name: name,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isReplyMsg: true,
+        parentMessage: parentMsgId,
+        parentMsgContent,
+      };
+
+      const messageForDB: any = {
+        type: "TEXT",
+        content: content,
+        chatGroup: groupId,
+        sender: senderId,
+        parentMessage: parentMsgId,
+        isReplyMsg: true,
+      };
+
+      const { io } = getSocketInfo();
+      io.to(groupId).emit("NEW_MESSAGE", {
+        groupId,
+        message: messageForRealTime,
+      });
+
+      // create message;
+      await MessageSchema.create(messageForDB);
+
+      res.json({
+        success: true,
+        msg: "reply to message successfully....",
+      });
+    } catch (error) {
+      console.log({ error });
+      next(error);
+    }
+  }
 }
 
 export const ChatControllerValidator = {
@@ -611,6 +708,30 @@ export const ChatControllerValidator = {
       .bail()
       .isMongoId()
       .withMessage("groupId must be a mongo id"),
+  ],
+  replyMessageValidation: [
+    body("parentMsgId")
+      .notEmpty()
+      .withMessage("parentMsgId is required")
+      .bail()
+      .isMongoId()
+      .withMessage("parentMsgId is must be a mongo id"),
+    body("groupId")
+      .notEmpty()
+      .withMessage("groupId is required")
+      .isMongoId()
+      .withMessage("parentMsgId is must be a mongo id"),
+    body("content")
+      .notEmpty()
+      .withMessage("content is required")
+      .bail()
+      .isString()
+      .withMessage("content is required"),
+    body("parentMsgText")
+      .optional()
+      .bail()
+      .isString()
+      .withMessage("parentMsgText must be string"),
   ],
 };
 

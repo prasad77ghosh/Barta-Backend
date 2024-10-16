@@ -21,4 +21,6 @@ export default interface MESSAGE_TYPE extends Document {
   sender: USER_TYPE;
   chatGroup: CHAT_GROUP_TYPE;
   type: MSG_TYPE;
+  isReplyMsg: boolean;
+  parentMessage: MESSAGE_TYPE;
 }

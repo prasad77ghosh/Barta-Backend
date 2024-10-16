@@ -62,5 +62,12 @@ export default class ChatRoutes {
       new ProtectedMiddleware().protected,
       this.chatController.sendMedia
     );
+
+    this.router.post(
+      "/reply-to-message",
+      ChatControllerValidator.replyMessageValidation,
+      new ProtectedMiddleware().protected,
+      this.chatController.replyMessage
+    );
   }
 }
