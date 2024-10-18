@@ -7,6 +7,11 @@ const messageSchema = new Schema<MESSAGE_TYPE, Model<MESSAGE_TYPE>>(
       type: String,
       trim: true,
     },
+    tempId: {
+      type: String,
+      trim: true,
+      unique: true,
+    },
     attachments: [
       {
         mediaPath: {

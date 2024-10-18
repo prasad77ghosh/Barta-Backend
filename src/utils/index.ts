@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 export function generateOtp(): string {
   const randomNumber = Math.floor(Math.random() * 10000);
   const otp = randomNumber.toString().padStart(4, "0");
@@ -9,3 +11,6 @@ export function generateSlugName(name: string): string {
   let slug = name.replace(/\s+/g, "_") + "_" + randomNumber;
   return slug.toLowerCase();
 }
+
+export const isValidObjectId = (id: string) =>
+  mongoose.Types.ObjectId.isValid(id);

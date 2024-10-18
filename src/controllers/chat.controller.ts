@@ -19,6 +19,7 @@ import mongoose from "mongoose";
 import { v4 as uuid } from "uuid";
 import { MediaStoreService } from "../services/media.service";
 import { getSocketInfo } from "../functions/chat.functions";
+import { isValidObjectId } from "../utils";
 
 class ChatController {
   async createPrivateChatGroup(
@@ -624,8 +625,9 @@ class ChatController {
       const name = req?.payload?.name;
       const senderId = req?.payload?.userId;
       fieldValidateError(req);
+      let uid = uuid();
       const messageForRealTime: any = {
-        _id: uuid(),
+        _id: uid,
         type: "TEXT",
         content: content,
         chatGroup: groupId,
@@ -640,12 +642,23 @@ class ChatController {
         parentMsgContent,
       };
 
+      if (isValidObjectId(parentMsgId)) {
+      }
+      const parent: any = isValidObjectId(parentMsgId)
+        ? await MessageSchema.findOne({
+            _id: parentMsgId,
+          })
+        : await MessageSchema.findOne({
+            tempId: parentMsgId,
+          });
+
       const messageForDB: any = {
         type: "TEXT",
         content: content,
+        tempId: uid,
         chatGroup: groupId,
         sender: senderId,
-        parentMessage: parentMsgId,
+        parentMessage: parent ? parent?._id : parentMsgId,
         isReplyMsg: true,
       };
 
@@ -713,9 +726,9 @@ export const ChatControllerValidator = {
     body("parentMsgId")
       .notEmpty()
       .withMessage("parentMsgId is required")
-      .bail()
-      .isMongoId()
-      .withMessage("parentMsgId is must be a mongo id"),
+      .bail(),
+    // .isMongoId()
+    // .withMessage("parentMsgId is must be a mongo id"),
     body("groupId")
       .notEmpty()
       .withMessage("groupId is required")

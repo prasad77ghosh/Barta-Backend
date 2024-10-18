@@ -138,8 +138,9 @@ export const sendMessage = ({
   socket.on(
     "NEW_MESSAGE",
     async ({ groupId, message, type, isFirstTime, members }) => {
+      const uid = uuid();
       const realTimeMsg = {
-        _id: uuid(),
+        _id: uid,
         type: type,
         content: message,
         chatGroup: groupId,
@@ -175,6 +176,7 @@ export const sendMessage = ({
 
         const lastMsg = await MessageSchema.create({
           content: message,
+          tempId: uid,
           type: "TEXT",
           sender: user?.userId,
           chatGroup: groupId,

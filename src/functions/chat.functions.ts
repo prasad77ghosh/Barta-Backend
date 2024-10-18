@@ -7,5 +7,6 @@ export function getSocketInfo() {
   const io = instance.getIO();
   const socketIds = instance.getSocketIds();
   const roomMembers = instance.getRoomMembers();
-  return { io, socketIds, roomMembers };
+  const socket = instance.getSocket();
+  return { io, socketIds, roomMembers, socket };
 }

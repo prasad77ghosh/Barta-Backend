@@ -17,6 +17,7 @@ class SocketServer {
   private app: Application;
   private socketIds: Map<string, string>;
   private roomMembers: Map<string, string>;
+  private socketInstance?: Socket<ClientToServerEvents, ServerToClientEvents>;
 
   constructor(server: HttpServer) {
     this.socketIds = new Map();
@@ -45,6 +46,7 @@ class SocketServer {
     socket: Socket<ClientToServerEvents, ServerToClientEvents>
   ) => {
     const user = (socket as any).user;
+    this.socketInstance = socket;
     this.socketIds.set(user?.userId?.toString(), socket.id);
     console.log(`Client connected: ${socket.id}, ${user.name}`);
 
@@ -119,6 +121,10 @@ class SocketServer {
   // Getter for roomMembers
   public getRoomMembers() {
     return this.roomMembers;
+  }
+
+  public getSocket() {
+    return this.socketInstance;
   }
 
   // Static method to access SocketServer instance

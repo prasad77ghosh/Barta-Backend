@@ -53,6 +53,14 @@ export interface ServerToClientEvents {
     message: any;
   }) => void;
 
+  ON_SAVE_MESSAGE: ({
+    groupId,
+    message,
+  }: {
+    groupId: string;
+    message: any;
+  }) => void;
+
   FIRST_TIME_MESSAGE: ({
     groupId,
     message,
