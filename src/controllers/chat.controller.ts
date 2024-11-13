@@ -552,9 +552,9 @@ class ChatController {
       }
 
       // send media files
-
+      let uid = uuid();
       const messageForRealTime: any = {
-        _id: uuid(),
+        _id: uid,
         type: type,
         content: content,
         chatGroup: groupId,
@@ -569,6 +569,7 @@ class ChatController {
       const messageForDB: any = {
         type: type,
         content: content,
+        tempId: uid,
         chatGroup: groupId,
         attachments: attachments,
         sender,
@@ -583,12 +584,21 @@ class ChatController {
 
       const message = await MessageSchema.create(messageForDB);
 
+      if (message) {
+        await ChatGroupSchema.findByIdAndUpdate(groupId, {
+          updatedAt: new Date(),
+          lastMsg: message._id,
+          isMessaged: true,
+        });
+      }
+
       res.json({
         success: true,
         msg: "file send successfully..",
         data: message,
       });
     } catch (error) {
+      console.log("ERROR IN SEND MEDIA", error);
       next(error);
     }
   }
@@ -669,7 +679,15 @@ class ChatController {
       });
 
       // create message;
-      await MessageSchema.create(messageForDB);
+      const replyMessage = await MessageSchema.create(messageForDB);
+
+      if (replyMessage) {
+        await ChatGroupSchema.findByIdAndUpdate(groupId, {
+          updatedAt: new Date(),
+          lastMsg: replyMessage._id,
+          isMessaged: true,
+        });
+      }
 
       res.json({
         success: true,

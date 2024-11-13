@@ -45,13 +45,6 @@ export const joinRoom = ({
         .to(groupId)
         .emit("ALERT", `${user?.name} is active in ${groupName}`);
 
-      //filter all the members who are not active in the group
-      const filteredSocketIds = filterAllGroupMembersWhoAreNotActiveInGroups({
-        members,
-        socketIds,
-        roomMembers,
-      });
-
       const onlineUsers: string[] = Array.from(socketIds.keys());
       io.to(groupId).emit("ONLINE_USERS", onlineUsers);
     }
