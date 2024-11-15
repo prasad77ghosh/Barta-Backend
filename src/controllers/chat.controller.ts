@@ -461,6 +461,7 @@ class ChatController {
             chatGroup: 1,
             createdAt: 1,
             updatedAt: 1,
+            isFirstMessageOfTheDay: 1,
             sender: { $arrayElemAt: ["$Sender", 0] },
             isReplyMsg: 1,
             parentMsgContent: { $arrayElemAt: ["$parentMessage.content", 0] },
@@ -631,7 +632,13 @@ class ChatController {
     next: NextFunction
   ) {
     try {
-      const { parentMsgId, groupId, content, parentMsgContent } = req.body;
+      const {
+        parentMsgId,
+        groupId,
+        content,
+        parentMsgContent,
+        isFirstMessageOfTheDay,
+      } = req.body;
       const name = req?.payload?.name;
       const senderId = req?.payload?.userId;
       fieldValidateError(req);
@@ -650,10 +657,9 @@ class ChatController {
         isReplyMsg: true,
         parentMessage: parentMsgId,
         parentMsgContent,
+        isFirstMessageOfTheDay,
       };
 
-      if (isValidObjectId(parentMsgId)) {
-      }
       const parent: any = isValidObjectId(parentMsgId)
         ? await MessageSchema.findOne({
             _id: parentMsgId,
@@ -670,6 +676,7 @@ class ChatController {
         sender: senderId,
         parentMessage: parent ? parent?._id : parentMsgId,
         isReplyMsg: true,
+        isFirstMessageOfTheDay,
       };
 
       const { io } = getSocketInfo();

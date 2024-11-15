@@ -122,11 +122,13 @@ export interface ClientToServerEvents {
     message,
     isFirstTime,
     members,
+    isFirstMessageOfTheDay,
   }: {
     groupId: string;
     type: MSG_TYPE;
     message: any;
     isFirstTime: boolean;
     members?: string[];
+    isFirstMessageOfTheDay?: boolean;
   }) => void;
 }

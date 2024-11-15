@@ -24,4 +24,5 @@ export default interface MESSAGE_TYPE extends Document {
   type: MSG_TYPE;
   isReplyMsg: boolean;
   parentMessage: MESSAGE_TYPE;
+  isFirstMessageOfTheDay: boolean;
 }

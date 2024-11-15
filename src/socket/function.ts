@@ -130,8 +130,16 @@ export const sendMessage = ({
 }) => {
   socket.on(
     "NEW_MESSAGE",
-    async ({ groupId, message, type, isFirstTime, members }) => {
+    async ({
+      groupId,
+      message,
+      type,
+      isFirstTime,
+      members,
+      isFirstMessageOfTheDay,
+    }) => {
       const uid = uuid();
+
       const realTimeMsg = {
         _id: uid,
         type: type,
@@ -145,6 +153,7 @@ export const sendMessage = ({
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        isFirstMessageOfTheDay,
       };
 
       io.to(groupId).emit("NEW_MESSAGE", {
@@ -173,6 +182,7 @@ export const sendMessage = ({
           type: "TEXT",
           sender: user?.userId,
           chatGroup: groupId,
+          isFirstMessageOfTheDay,
         });
 
         if (lastMsg) {

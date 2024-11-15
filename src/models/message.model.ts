@@ -38,6 +38,10 @@ const messageSchema = new Schema<MESSAGE_TYPE, Model<MESSAGE_TYPE>>(
       type: Boolean,
       default: false,
     },
+    isFirstMessageOfTheDay: {
+      type: Boolean,
+      default: false,
+    },
     type: {
       type: String,
       enum: {
