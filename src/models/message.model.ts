@@ -12,6 +12,10 @@ const messageSchema = new Schema<MESSAGE_TYPE, Model<MESSAGE_TYPE>>(
       trim: true,
       unique: true,
     },
+    link: {
+      type: String,
+      trim: true,
+    },
     attachments: [
       {
         mediaPath: {

@@ -69,5 +69,12 @@ export default class ChatRoutes {
       new ProtectedMiddleware().protected,
       this.chatController.replyMessage
     );
+
+    this.router.post(
+      "/send-product-in-chat",
+      ChatControllerValidator.sendProductInChat,
+      new ProtectedMiddleware().isEmployeeOrAdmin,
+      this.chatController.sendProductInChat
+    );
   }
 }

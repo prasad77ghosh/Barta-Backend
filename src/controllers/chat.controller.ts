@@ -705,6 +705,80 @@ class ChatController {
       next(error);
     }
   }
+
+  async sendMessageToMultipleUsers(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async sendProductInChat(
+    req: MIDDLEWARE_REQUEST_TYPE,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { productLink, productImage, groupId, type } = req?.body;
+      const sender = req?.payload?.userId;
+      let uid = uuid();
+      const messageForRealTime: any = {
+        _id: uid,
+        type: type,
+        link: productLink,
+        chatGroup: groupId,
+        attachments: [
+          {
+            imageUrl: productImage,
+          },
+        ],
+        sender: {
+          _id: sender,
+          name: req?.payload?.name,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const messageForDB: any = {
+        type: type,
+        tempId: uid,
+        chatGroup: groupId,
+        attachments: [
+          {
+            imageUrl: productImage,
+          },
+        ],
+        sender,
+      };
+
+      const { io } = getSocketInfo();
+
+      io.to(groupId).emit("NEW_MESSAGE", {
+        groupId,
+        message: messageForRealTime,
+      });
+
+      const message = await MessageSchema.create(messageForDB);
+      if (message) {
+        await ChatGroupSchema.findByIdAndUpdate(groupId, {
+          updatedAt: new Date(),
+          lastMsg: message._id,
+          isMessaged: true,
+        });
+      }
+      res.json({
+        success: true,
+        msg: "home send successfully..",
+        data: message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const ChatControllerValidator = {
@@ -770,6 +844,26 @@ export const ChatControllerValidator = {
       .bail()
       .isString()
       .withMessage("parentMsgText must be string"),
+  ],
+  sendProductInChat: [
+    body("productLink")
+      .isEmpty()
+      .withMessage("productLink is required")
+      .bail()
+      .isURL()
+      .withMessage("Not a valid URL"),
+    body("productImage")
+      .isEmpty()
+      .withMessage("productImage is required")
+      .bail()
+      .isString()
+      .withMessage("product image must be string"),
+    body("groupId")
+      .isEmpty()
+      .withMessage("groupId is required")
+      .bail()
+      .isMongoId()
+      .withMessage("groupId must be a mongo id"),
   ],
 };
 
