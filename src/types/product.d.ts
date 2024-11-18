@@ -17,8 +17,6 @@ export default interface PRODUCT_TYPE extends Document {
   status: PRODUCT_STATUS;
   isSoldOut: boolean;
   floorNumber: number;
-  bhkType: BHK_TYPE;
-  category: PRODUCT_CATEGORY_TYPE;
   listedBy: USER_TYPE;
   price: number;
   productImages: PRODUCT_IMAGE[];

@@ -23,7 +23,7 @@ export default class ProductRoutes {
     );
     this.router.get(
       "/",
-      new ProtectedMiddleware().isEmployeeOrAdmin,
+      // new ProtectedMiddleware().isEmployeeOrAdmin,
       this.productController.getAllProduct
     );
   }

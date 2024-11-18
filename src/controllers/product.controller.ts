@@ -108,12 +108,6 @@ class ProductController {
 
       // get product according to status
       const productStatus = ["PENDING", "DISABLE", "DELETED"];
-      if (
-        (reqUser?.role !== "ADMIN" && productStatus.includes(status)) ||
-        (reqUser?.role !== "ADMIN" && status === undefined)
-      ) {
-        throw new NotAcceptable("You not authorized to get products");
-      }
 
       // global filter
       if (searchTitle) {
@@ -448,8 +442,7 @@ export const ProductControllerValidator = {
       .withMessage("floorNumber must be a number"),
     body("price").notEmpty().withMessage("price is required"),
     body("listedBy")
-      .notEmpty()
-      .withMessage("listedBy is required")
+      .optional()
       .isMongoId()
       .withMessage("listedBy is must be a mongo id"),
   ],
